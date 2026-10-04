@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# trigger-geofabrik-build
 import json, os, time, requests
 from pathlib import Path
 from shapely.geometry import shape, LineString, MultiLineString, GeometryCollection
