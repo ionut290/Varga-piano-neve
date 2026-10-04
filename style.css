@@ -57,3 +57,6 @@
 @media(max-width:799px){.majorTopButtons{gap:4px}.routeChangeBtn{padding:6px 7px}.majorMoreBtn{width:30px;height:30px;font-size:20px}.majorMoreMenu{top:36px;width:min(280px,94%);padding:9px}.majorStateAction{margin-top:8px}.majorStateAction button{min-height:50px}}
 
 .updateAppBtn{background:#263b47;color:#dce9ef}.appBuild{display:block;text-align:center;color:#78909c;font-size:9px;margin-top:2px}
+
+.startupCard>div{display:grid;gap:10px}.startupCard>div[hidden]{display:none!important}.startupCard .routePick{min-height:58px;font-size:15px}.chooserBack{justify-self:start;background:#213743;color:#dce8ef;padding:8px 12px;min-height:38px}.startupCard>b,.startupCard>div>b{font-size:21px}.startupCard small{color:#91a6b3}
+@media(max-width:799px){.startupCard .routePick{min-height:54px;font-size:14px}.startupCard>div{gap:9px}}
