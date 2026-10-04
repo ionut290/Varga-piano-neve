@@ -165,11 +165,16 @@ async function loadMajorRoadNetwork(){
  if(!roads.length)throw new Error('Reticolo stradale offline non ancora generato');
  majorRoadNetwork=roads;return majorRoadNetwork
 }
-function findMajorWays(street){
- const network=majorRoadNetwork||[],target=majorSearchName(street.searchName||street.name),n=normRoadName(target);if(!network.length)return[];
+function findMajorWaysByName(value){
+ const network=majorRoadNetwork||[],target=majorSearchName(value),n=normRoadName(target);if(!network.length||!n)return[];
  let exact=network.filter(w=>normRoadName(w.name)===n);if(exact.length)return exact;
  const scored=network.map(w=>({w,score:roadNameScore(target,w.name)})).sort((a,b)=>b.score-a.score),best=scored[0]?.score||0;if(best<.5)return[];
  const winner=normRoadName(scored[0].w.name);return network.filter(w=>normRoadName(w.name)===winner)
+}
+function findMajorWays(street){
+ const aliases=Array.isArray(street.searchNames)&&street.searchNames.length?street.searchNames:[street.searchName||street.name],seen=new Set(),out=[];
+ for(const alias of aliases)for(const w of findMajorWaysByName(alias)){if(!seen.has(w.id)){seen.add(w.id);out.push(w)}}
+ return out
 }
 function offsetRoad(coords,meters){
  return coords.map((p,i)=>{const a=coords[Math.max(0,i-1)],b=coords[Math.min(coords.length-1,i+1)],lat=p[0]*Math.PI/180,dx=(b[1]-a[1])*111320*Math.cos(lat),dy=(b[0]-a[0])*110540,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;return[p[0]+ny*meters/110540,p[1]+nx*meters/(111320*Math.cos(lat))]})
