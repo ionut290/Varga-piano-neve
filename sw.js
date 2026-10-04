@@ -1,4 +1,4 @@
-const C='varga-piano-neve-v33-startup-flow',A=['./','./index.html','./style.css?v=19','./major-network.js?v=3','./major-offline-nav.js?v=3','./major-routes.js?v=4','./routes-rebuilt.js?v=4','./routes-instructions.js?v=1','./app.js?v=37','./manifest.webmanifest'];
+const C='varga-piano-neve-v34-hidden-details',A=['./','./index.html','./style.css?v=20','./major-network.js?v=3','./major-offline-nav.js?v=3','./major-routes.js?v=4','./routes-rebuilt.js?v=4','./routes-instructions.js?v=1','./app.js?v=38','./manifest.webmanifest'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(A)))});
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([self.clients.claim(),caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x))))])));
 self.addEventListener('message',e=>{if(e.data?.type==='SKIP_WAITING')self.skipWaiting()});
