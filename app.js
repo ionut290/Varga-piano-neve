@@ -139,7 +139,7 @@ async function chooseMajorRoute(index){
  const n=Number(index);if(!Number.isInteger(n)||n<0||n>=majorRoutes.length)return;
  majorRi=n;majorPi=0;localStorage.setItem('majorSelectedRoute',String(n));majorTracking.routeIndex=null;majorTracking.lanes=[];resetTrackingJoin();routeLayer.clearLayers();closeMajorChooser();renderMajor();await showMajorRoute()
 }
-function initMajorRouteSelection(){document.querySelectorAll('[data-major-route]').forEach(b=>b.onclick=()=>chooseMajorRoute(b.dataset.majorRoute));$('majorChooserCancel').onclick=closeMajorChooser;$('majorChangeRoute').onclick=()=>{if(mapState.active){alert('Termina il lavoro prima di cambiare percorso.');return}openMajorChooser(true)};openMajorChooser(false)}
+function initMajorRouteSelection(){document.querySelectorAll('[data-major-route]').forEach(b=>b.onclick=()=>chooseMajorRoute(b.dataset.majorRoute));$('majorChooserCancel').onclick=closeMajorChooser;$('majorChangeRoute').onclick=()=>{setMajorMore(false);if(mapState.active){alert('Termina il lavoro prima di cambiare percorso.');return}openMajorChooser(true)};openMajorChooser(false)}
 
 function majorSearchName(name){return name.replace(/\s*\+.*$/,'').replace(/\s*\(.*$/,'').replace(/^PARCH\.\s*/i,'').replace(/^PARCHEGGIO\s+/i,'').replace(/^PARCHEGGI\s+/i,'').trim()}
 let majorRoadNetwork=[],majorBoundary=null,majorBoundaryLayer=null;
