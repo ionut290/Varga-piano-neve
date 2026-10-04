@@ -79,3 +79,20 @@
   #major>.majorMoreMenu{bottom:58px;width:calc(100vw - 36px);max-height:62vh;padding:10px}
   #major>.majorMoreMenu #majorStreets{max-height:150px}
 }
+
+/* Build 39: menu dettagli maggiore come overlay pulito */
+.tabs[hidden]{display:none!important}
+#panel:has(#major:not([hidden])){background:transparent!important;box-shadow:none!important;padding:0 12px!important;overflow:visible!important;max-height:none!important}
+#major>.operatorMoreBtn{position:fixed!important;top:72px!important;right:12px!important;left:auto!important;z-index:1900!important;width:42px!important;height:42px!important;border-radius:13px!important;background:#213743!important;color:#fff!important;font-size:25px!important}
+#major>.majorMoreMenu{position:fixed!important;left:12px!important;right:12px!important;top:120px!important;bottom:92px!important;width:auto!important;max-height:none!important;overflow:auto!important;padding:14px!important;border:1px solid #2d4655!important;border-radius:18px!important;background:rgba(8,20,29,.985)!important;box-shadow:0 14px 38px #000a!important;z-index:1850!important}
+#major>.majorMoreMenu[hidden]{display:none!important}
+.majorMenuHeader{position:sticky;top:-14px;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-14px -14px 10px;padding:12px 14px;background:#0a1b26;border-bottom:1px solid #29414f}
+.majorMenuHeader>b{font-size:15px}.majorMoreClose{width:38px!important;min-height:38px!important;height:38px;padding:0!important;border-radius:50%!important;background:#213743!important;color:#fff!important;font-size:18px!important}
+#major>.majorStateAction{margin:0!important}
+#major>.majorStateAction button{width:100%!important;min-height:56px!important}
+@media(max-width:799px){
+  #major>.operatorMoreBtn{top:64px!important;right:10px!important;width:38px!important;height:38px!important;font-size:23px!important}
+  #major>.majorMoreMenu{left:10px!important;right:10px!important;top:108px!important;bottom:82px!important;padding:11px!important;border-radius:16px!important}
+  .majorMenuHeader{top:-11px;margin:-11px -11px 9px;padding:10px 11px}
+  #major>.majorStateAction button{min-height:54px!important;font-size:16px!important}
+}
