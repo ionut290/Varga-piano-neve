@@ -1,0 +1,2721 @@
+{
+  "date": "2026-10-04",
+  "osmSnapshot": "2026-10-04",
+  "osmLicense": "ODbL, OpenStreetMap contributors",
+  "validation": {
+    "changedParts": 154,
+    "changedStops": 31,
+    "drawnMeters": 10000,
+    "originalMeters": 8997,
+    "from": {
+      "kml": 98,
+      "regional-estimate": 56
+    },
+    "maxJoinGap": 1.98,
+    "joinsOver3m": []
+  },
+  "geometryToleranceMeters": 0.03,
+  "changes": [
+    {
+      "route": 0,
+      "segment": 1,
+      "leg": 0,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287080416,
+        287080417,
+        287089122,
+        287095321,
+        287095324,
+        287103020
+      ],
+      "shift": [
+        2.0,
+        3.53
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 1,
+      "leg": 1,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287080417
+      ],
+      "shift": [
+        3.53,
+        3.43
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 1,
+      "leg": 2,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        287080417
+      ],
+      "shift": [
+        3.43,
+        0.6
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 1,
+      "leg": 5,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        371853705
+      ],
+      "shift": [
+        0.46,
+        0.67
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 1,
+      "leg": 6,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        371853705
+      ],
+      "shift": [
+        0.67,
+        0.74
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 4,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        300930980
+      ],
+      "shift": [
+        8.46,
+        1.46
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 6,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288594629
+      ],
+      "shift": [
+        0.61,
+        1.57
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 8,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288594629
+      ],
+      "shift": [
+        1.11,
+        1.78
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 11,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        48452690,
+        288594626,
+        288594629
+      ],
+      "shift": [
+        3.66,
+        1.88
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 12,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        200570210,
+        288594626,
+        288594629
+      ],
+      "shift": [
+        1.88,
+        0.96
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 13,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        48452689,
+        200570210
+      ],
+      "shift": [
+        0.96,
+        1.79
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 14,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        48452689,
+        200570210
+      ],
+      "shift": [
+        1.79,
+        1.29
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 16,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        48452657,
+        48452670,
+        139796024
+      ],
+      "shift": [
+        0.62,
+        0.63
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 17,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        139796021,
+        139796024
+      ],
+      "shift": [
+        0.63,
+        4.35
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 4,
+      "leg": 7,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287080417,
+        288606723
+      ],
+      "shift": [
+        2.39,
+        3.65
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 4,
+      "leg": 8,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287080417,
+        287305362
+      ],
+      "shift": [
+        3.65,
+        0.49
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 4,
+      "leg": 11,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287080417,
+        288606723
+      ],
+      "shift": [
+        2.02,
+        3.36
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 4,
+      "leg": 17,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        48452683,
+        288606279,
+        288606280,
+        288606284,
+        348755831
+      ],
+      "shift": [
+        0.8,
+        3.31
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 4,
+      "leg": 18,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        48452683,
+        288606279,
+        288606280,
+        288606284,
+        348755831
+      ],
+      "shift": [
+        3.31,
+        1.49
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 4,
+      "leg": 19,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288606280,
+        288606284,
+        348755831
+      ],
+      "shift": [
+        1.49,
+        3.28
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 7,
+      "leg": 3,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        286298642,
+        290702441,
+        290702445
+      ],
+      "shift": [
+        0.86,
+        0.16
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 7,
+      "leg": 12,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288640730
+      ],
+      "shift": [
+        14.59,
+        22.98
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 7,
+      "leg": 13,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288640730
+      ],
+      "shift": [
+        21.17,
+        21.1
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 7,
+      "leg": 17,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288640730,
+        288640731
+      ],
+      "shift": [
+        5.78,
+        4.89
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 7,
+      "leg": 18,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288640729,
+        288640730
+      ],
+      "shift": [
+        4.82,
+        12.38
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 8,
+      "leg": 1,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        48452670
+      ],
+      "shift": [
+        21.42,
+        18.26
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 8,
+      "leg": 2,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        48452670,
+        296756072
+      ],
+      "shift": [
+        20.46,
+        0.5
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 8,
+      "leg": 3,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        48452670,
+        139796024
+      ],
+      "shift": [
+        0.5,
+        0.33
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 9,
+      "leg": 0,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        1374701082
+      ],
+      "shift": [
+        0.45,
+        1.74
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 9,
+      "leg": 1,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        1374701082
+      ],
+      "shift": [
+        1.74,
+        7.3
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 9,
+      "leg": 2,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        1374701082
+      ],
+      "shift": [
+        7.3,
+        0.84
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 9,
+      "leg": 3,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        138104417,
+        1374701082
+      ],
+      "shift": [
+        0.84,
+        5.32
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 10,
+      "leg": 0,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        287095325
+      ],
+      "shift": [
+        1.46,
+        0.24
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 10,
+      "leg": 3,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287080423,
+        302781680,
+        371853706,
+        373884977
+      ],
+      "shift": [
+        0.28,
+        2.81
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 10,
+      "leg": 4,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287089144,
+        287089146,
+        287089147,
+        1228476953
+      ],
+      "shift": [
+        2.8,
+        3.03
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 10,
+      "leg": 5,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287089147
+      ],
+      "shift": [
+        3.03,
+        0.29
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 10,
+      "leg": 6,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        287089147
+      ],
+      "shift": [
+        0.29,
+        0.75
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 10,
+      "leg": 11,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        286298642
+      ],
+      "shift": [
+        12.78,
+        0.86
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 11,
+      "leg": 1,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288277510,
+        289289965
+      ],
+      "shift": [
+        2.44,
+        5.08
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 12,
+      "leg": 0,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287202092,
+        288277510,
+        288456864,
+        288456867,
+        288457469,
+        288457471
+      ],
+      "shift": [
+        2.24,
+        1.36
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 12,
+      "leg": 3,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        139436350,
+        300923535,
+        300924592
+      ],
+      "shift": [
+        1.37,
+        0.23
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 12,
+      "leg": 12,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        26973929,
+        290702840
+      ],
+      "shift": [
+        0.99,
+        0.73
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 13,
+      "leg": 2,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288772214,
+        288772215,
+        288772216,
+        288772217,
+        318931914,
+        383661116
+      ],
+      "shift": [
+        5.04,
+        0.4
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 0,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        26973929,
+        200568600,
+        200568605
+      ],
+      "shift": [
+        0.73,
+        5.66
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 1,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        200568600
+      ],
+      "shift": [
+        5.66,
+        5.1
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 2,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        200568600
+      ],
+      "shift": [
+        5.1,
+        1.9
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 3,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        200568600
+      ],
+      "shift": [
+        1.9,
+        5.22
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 9,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        200568600,
+        287089148
+      ],
+      "shift": [
+        2.22,
+        8.61
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 10,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287089148
+      ],
+      "shift": [
+        8.61,
+        4.18
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 11,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        287089148,
+        288275757
+      ],
+      "shift": [
+        4.12,
+        0.28
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 12,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288275757,
+        300654137
+      ],
+      "shift": [
+        0.28,
+        4.16
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 14,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288639794
+      ],
+      "shift": [
+        2.23,
+        6.24
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 15,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288639791,
+        288639793,
+        288639794,
+        361128214
+      ],
+      "shift": [
+        6.24,
+        2.18
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 16,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288639787,
+        288639789,
+        288639791,
+        361128214
+      ],
+      "shift": [
+        2.18,
+        1.41
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 17,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288639787
+      ],
+      "shift": [
+        1.41,
+        1.87
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 27,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        286298640,
+        286298641,
+        286298642
+      ],
+      "shift": [
+        2.75,
+        0.59
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 29,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288640727,
+        295084975
+      ],
+      "shift": [
+        2.7,
+        0.58
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 30,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        138104200,
+        295084975
+      ],
+      "shift": [
+        0.58,
+        8.13
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 31,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        138104200
+      ],
+      "shift": [
+        8.08,
+        1.72
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 33,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        138104198,
+        138104200,
+        290702285,
+        290702286
+      ],
+      "shift": [
+        1.47,
+        4.24
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 34,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        138104198,
+        138104200,
+        290702285,
+        290702286
+      ],
+      "shift": [
+        4.24,
+        5.46
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 36,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        138104200
+      ],
+      "shift": [
+        3.6,
+        3.06
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 40,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287222405,
+        295084975,
+        295084976,
+        1228476950,
+        1228476951
+      ],
+      "shift": [
+        1.7,
+        16.28
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 41,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        295084975
+      ],
+      "shift": [
+        16.28,
+        7.64
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 42,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        295084975
+      ],
+      "shift": [
+        7.64,
+        1.65
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 44,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        138104200,
+        295084975
+      ],
+      "shift": [
+        0.17,
+        1.58
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 46,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        138104200
+      ],
+      "shift": [
+        0.61,
+        4.85
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 47,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        138104200
+      ],
+      "shift": [
+        4.99,
+        0.12
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 55,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        290702441,
+        290702451
+      ],
+      "shift": [
+        1.21,
+        2.68
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 0,
+      "leg": 0,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        116454714
+      ],
+      "shift": [
+        3.12,
+        1.35
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 0,
+      "leg": 3,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        116454714
+      ],
+      "shift": [
+        1.38,
+        0.36
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 1,
+      "leg": 12,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287108488,
+        287202093,
+        287202095,
+        288274182,
+        288274183,
+        288279612,
+        361137676,
+        361137677,
+        1497910251
+      ],
+      "shift": [
+        1.7,
+        1.69
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 1,
+      "leg": 14,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        116454716
+      ],
+      "shift": [
+        3.22,
+        4.86
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 1,
+      "leg": 15,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        116454716,
+        271107674
+      ],
+      "shift": [
+        4.42,
+        1.27
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 1,
+      "leg": 18,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        116454716,
+        287095341,
+        287095342,
+        288772436
+      ],
+      "shift": [
+        1.08,
+        8.26
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 1,
+      "leg": 19,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287095342,
+        323820914
+      ],
+      "shift": [
+        8.26,
+        13.27
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 1,
+      "leg": 23,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        395065776,
+        940036933,
+        940036934,
+        1089007463,
+        1499540360,
+        1499540361,
+        1499540362
+      ],
+      "shift": [
+        4.83,
+        4.01
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 3,
+      "leg": 1,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287108516,
+        287108518,
+        301495125
+      ],
+      "shift": [
+        2.89,
+        6.73
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 3,
+      "leg": 2,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287108516
+      ],
+      "shift": [
+        6.73,
+        0.79
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 3,
+      "leg": 9,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287108521,
+        287202096
+      ],
+      "shift": [
+        0.71,
+        4.76
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 3,
+      "leg": 10,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287108521,
+        287202096
+      ],
+      "shift": [
+        4.76,
+        0.92
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 0,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        287108493,
+        288783580
+      ],
+      "shift": [
+        1.67,
+        4.64
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 1,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288783580
+      ],
+      "shift": [
+        4.59,
+        2.56
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 12,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288783402,
+        290549248
+      ],
+      "shift": [
+        1.5,
+        0.8
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 13,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        287108507,
+        288783402,
+        288783489,
+        1497910254
+      ],
+      "shift": [
+        0.8,
+        5.85
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 14,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287108495,
+        1497910254
+      ],
+      "shift": [
+        5.85,
+        0.41
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 15,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287108493,
+        287108495,
+        288783580
+      ],
+      "shift": [
+        0.41,
+        2.73
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 18,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288783580,
+        288783583
+      ],
+      "shift": [
+        1.53,
+        12.07
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 19,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288783580,
+        288783585,
+        288783987
+      ],
+      "shift": [
+        12.07,
+        0.38
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 21,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288783987
+      ],
+      "shift": [
+        0.36,
+        3.59
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 22,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288783987
+      ],
+      "shift": [
+        3.0,
+        3.7
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 23,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288783987,
+        308545109
+      ],
+      "shift": [
+        4.74,
+        1.72
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 26,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288783986,
+        1497615956
+      ],
+      "shift": [
+        3.09,
+        0.15
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 29,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288303450
+      ],
+      "shift": [
+        1.27,
+        2.91
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 5,
+      "leg": 1,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288783580,
+        308545109,
+        940036933
+      ],
+      "shift": [
+        0.29,
+        3.83
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 5,
+      "leg": 2,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288783580,
+        288792857
+      ],
+      "shift": [
+        3.83,
+        0.63
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 5,
+      "leg": 3,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288783580,
+        288792857
+      ],
+      "shift": [
+        0.63,
+        3.62
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 5,
+      "leg": 4,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288783580
+      ],
+      "shift": [
+        3.62,
+        9.88
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 7,
+      "leg": 0,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288773079,
+        1339849924
+      ],
+      "shift": [
+        13.97,
+        0.17
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 7,
+      "leg": 4,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        200571507,
+        288280569,
+        323820914,
+        1499594117
+      ],
+      "shift": [
+        6.0,
+        2.81
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 7,
+      "leg": 5,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        323820914
+      ],
+      "shift": [
+        2.81,
+        2.58
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 7,
+      "leg": 6,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        323820914
+      ],
+      "shift": [
+        2.58,
+        1.27
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 7,
+      "leg": 12,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288816500,
+        323820914
+      ],
+      "shift": [
+        2.03,
+        2.47
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 7,
+      "leg": 13,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        323820914
+      ],
+      "shift": [
+        2.47,
+        0.59
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 8,
+      "leg": 0,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        287103017
+      ],
+      "shift": [
+        1.55,
+        1.28
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 8,
+      "leg": 1,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287103017,
+        288772216
+      ],
+      "shift": [
+        1.28,
+        14.4
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 8,
+      "leg": 5,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287103017
+      ],
+      "shift": [
+        9.78,
+        11.81
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 8,
+      "leg": 6,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288772216
+      ],
+      "shift": [
+        13.2,
+        9.36
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 8,
+      "leg": 14,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        287103017,
+        288459656
+      ],
+      "shift": [
+        0.91,
+        2.4
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 9,
+      "leg": 3,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287108506,
+        290549248
+      ],
+      "shift": [
+        0.53,
+        3.11
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 10,
+      "leg": 1,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288284699
+      ],
+      "shift": [
+        1.65,
+        1.39
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 10,
+      "leg": 5,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288284699
+      ],
+      "shift": [
+        0.77,
+        4.46
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 10,
+      "leg": 6,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288284699,
+        289556266,
+        289556270
+      ],
+      "shift": [
+        6.09,
+        4.85
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 10,
+      "leg": 7,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287089105,
+        289556266,
+        291753641,
+        291753642
+      ],
+      "shift": [
+        2.9,
+        3.87
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 10,
+      "leg": 8,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287089100,
+        287089101,
+        287089102,
+        287089103,
+        287089104,
+        287089105,
+        287089106
+      ],
+      "shift": [
+        3.87,
+        1.14
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 12,
+      "leg": 2,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288783985,
+        288783986,
+        1497615956
+      ],
+      "shift": [
+        0.86,
+        3.69
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 12,
+      "leg": 3,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288783985,
+        288783986,
+        1497615956
+      ],
+      "shift": [
+        3.69,
+        14.71
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 13,
+      "leg": 1,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        25372613,
+        1497283499
+      ],
+      "shift": [
+        0.01,
+        0.41
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 13,
+      "leg": 2,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        25372613,
+        288773099
+      ],
+      "shift": [
+        0.41,
+        2.85
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 13,
+      "leg": 3,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288773099,
+        288773100
+      ],
+      "shift": [
+        2.85,
+        0.36
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 13,
+      "leg": 6,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        286270309,
+        383661123
+      ],
+      "shift": [
+        0.83,
+        0.35
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 13,
+      "leg": 7,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288773099,
+        383661123
+      ],
+      "shift": [
+        0.35,
+        1.66
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 15,
+      "leg": 0,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        25372613,
+        395065776,
+        940036934
+      ],
+      "shift": [
+        2.09,
+        0.56
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 16,
+      "leg": 1,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        286294744,
+        288448680
+      ],
+      "shift": [
+        1.93,
+        0.57
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 16,
+      "leg": 8,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        154350481,
+        286242500
+      ],
+      "shift": [
+        1.28,
+        1.06
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 16,
+      "leg": 9,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        154350481
+      ],
+      "shift": [
+        1.06,
+        0.08
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 0,
+      "leg": 0,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        954339551,
+        1159130575
+      ],
+      "shift": [
+        19.42,
+        16.39
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 0,
+      "leg": 14,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        954339551,
+        1159130575
+      ],
+      "shift": [
+        13.75,
+        6.6
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 1,
+      "leg": 6,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        224270037,
+        954339542,
+        954339543
+      ],
+      "shift": [
+        5.99,
+        4.61
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 8,
+      "leg": 0,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        928814391,
+        928814394,
+        928814395
+      ],
+      "shift": [
+        3.5,
+        1.26
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 8,
+      "leg": 4,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        928814397
+      ],
+      "shift": [
+        2.77,
+        3.21
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 8,
+      "leg": 10,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        928814397
+      ],
+      "shift": [
+        0.95,
+        12.8
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 8,
+      "leg": 16,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        224270037,
+        954339542,
+        954339543
+      ],
+      "shift": [
+        0.99,
+        19.4
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 9,
+      "leg": 0,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        301487660
+      ],
+      "shift": [
+        17.88,
+        4.25
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 9,
+      "leg": 1,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        301487660
+      ],
+      "shift": [
+        2.76,
+        10.8
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 9,
+      "leg": 4,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        301487660
+      ],
+      "shift": [
+        10.74,
+        2.97
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 9,
+      "leg": 5,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        301487660,
+        1500265297,
+        1500265298
+      ],
+      "shift": [
+        2.97,
+        0.84
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 11,
+      "leg": 0,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288450363,
+        288450364,
+        620119008
+      ],
+      "shift": [
+        1.24,
+        4.68
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 11,
+      "leg": 2,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        288450356
+      ],
+      "shift": [
+        1.55,
+        4.43
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 11,
+      "leg": 4,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        288450356,
+        292290344
+      ],
+      "shift": [
+        4.23,
+        4.57
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 11,
+      "leg": 5,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        292290349,
+        373885968
+      ],
+      "shift": [
+        4.35,
+        0.5
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 11,
+      "leg": 8,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        373885965,
+        984930091
+      ],
+      "shift": [
+        2.37,
+        3.39
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 11,
+      "leg": 9,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        984930090,
+        984930091
+      ],
+      "shift": [
+        3.39,
+        3.41
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 13,
+      "leg": 0,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287127475,
+        292290344,
+        373885968
+      ],
+      "shift": [
+        1.26,
+        7.56
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 13,
+      "leg": 1,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287127497,
+        287127499,
+        1500265294
+      ],
+      "shift": [
+        7.55,
+        7.31
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 13,
+      "leg": 2,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287127489,
+        287127497,
+        323821369,
+        1500261913,
+        1500265294
+      ],
+      "shift": [
+        7.31,
+        4.98
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 13,
+      "leg": 3,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        287127489,
+        323821369
+      ],
+      "shift": [
+        4.98,
+        1.58
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 13,
+      "leg": 6,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        323820932,
+        323821369
+      ],
+      "shift": [
+        0.16,
+        3.91
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 13,
+      "leg": 7,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        323820932,
+        323821369
+      ],
+      "shift": [
+        5.53,
+        4.05
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 13,
+      "leg": 10,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        287127487,
+        984930085
+      ],
+      "shift": [
+        0.46,
+        0.12
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 13,
+      "leg": 17,
+      "from": "regional-estimate",
+      "to": "osm",
+      "ways": [
+        287127480,
+        323821368
+      ],
+      "shift": [
+        0.91,
+        3.32
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 14,
+      "leg": 4,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        323820928,
+        1500233130
+      ],
+      "shift": [
+        1.48,
+        10.27
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 14,
+      "leg": 5,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        323820928
+      ],
+      "shift": [
+        10.79,
+        1.05
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 14,
+      "leg": 7,
+      "from": "kml",
+      "to": "osm",
+      "ways": [
+        984930090,
+        984930091,
+        1500249540
+      ],
+      "shift": [
+        5.34,
+        6.04
+      ]
+    }
+  ],
+  "joinedParts": [
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 4,
+      "ways": [
+        48452690,
+        300930980
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 5,
+      "ways": [
+        288594626,
+        288594629
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 7,
+      "ways": [
+        288594629
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 2,
+      "leg": 14,
+      "ways": [
+        200570210,
+        287305359
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 4,
+      "leg": 6,
+      "ways": [
+        287080417,
+        288606723
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 4,
+      "leg": 10,
+      "ways": [
+        287080417,
+        288606723
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 4,
+      "leg": 11,
+      "ways": [
+        287080417,
+        288606723
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 7,
+      "leg": 12,
+      "ways": [
+        288640730
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 7,
+      "leg": 17,
+      "ways": [
+        288640730
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 8,
+      "leg": 1,
+      "ways": [
+        48452670,
+        296756072
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 10,
+      "leg": 0,
+      "ways": [
+        287095325
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 10,
+      "leg": 3,
+      "ways": [
+        287080423,
+        1228476953
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 12,
+      "leg": 3,
+      "ways": [
+        139436350,
+        300924592
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 3,
+      "ways": [
+        200568600
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 10,
+      "ways": [
+        287089148
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 12,
+      "ways": [
+        300654137
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 30,
+      "ways": [
+        138104200
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 45,
+      "ways": [
+        138104200
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 46,
+      "ways": [
+        138104200
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 47,
+      "ways": [
+        138104200,
+        287089140
+      ]
+    },
+    {
+      "route": 0,
+      "segment": 14,
+      "leg": 54,
+      "ways": [
+        290702441,
+        290702451
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 1,
+      "leg": 14,
+      "ways": [
+        116454716,
+        271107674
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 1,
+      "leg": 17,
+      "ways": [
+        288772436
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 1,
+      "leg": 22,
+      "ways": [
+        299852584,
+        395065776
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 3,
+      "leg": 0,
+      "ways": [
+        287108518,
+        301495125
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 0,
+      "ways": [
+        288783580
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 20,
+      "ways": [
+        288783987
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 21,
+      "ways": [
+        288783987
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 4,
+      "leg": 22,
+      "ways": [
+        288783987,
+        308545109
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 5,
+      "leg": 0,
+      "ways": [
+        308545109
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 7,
+      "leg": 6,
+      "ways": [
+        323820910,
+        323820914
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 7,
+      "leg": 13,
+      "ways": [
+        323820914
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 8,
+      "leg": 1,
+      "ways": [
+        287103017,
+        288772216
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 8,
+      "leg": 5,
+      "ways": [
+        287103017,
+        288772216
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 8,
+      "leg": 13,
+      "ways": [
+        287103017,
+        288459656
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 10,
+      "leg": 5,
+      "ways": [
+        288284699
+      ]
+    },
+    {
+      "route": 1,
+      "segment": 10,
+      "leg": 6,
+      "ways": [
+        289556266,
+        291753642
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 9,
+      "leg": 0,
+      "ways": [
+        301487660
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 11,
+      "leg": 4,
+      "ways": [
+        292290344,
+        373885968
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 13,
+      "leg": 0,
+      "ways": [
+        287127499
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 13,
+      "leg": 6,
+      "ways": [
+        323820932
+      ]
+    },
+    {
+      "route": 2,
+      "segment": 14,
+      "leg": 4,
+      "ways": [
+        323820928
+      ]
+    }
+  ],
+  "remaining": "Unmatched lines remain visibly dashed. No straight connectors have been invented between disconnected footways."
+}

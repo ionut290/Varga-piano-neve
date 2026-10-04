@@ -47,20 +47,41 @@
   "priorAutomatedValidationNote": "Historical validation before manual ortho tracing. Original-leg coverage counts are not the current route-part counts.",
   "currentDrawnGeometry": {
     "osm": {
-      "parts": 227,
-      "drawnMeters": 13821
+      "parts": 381,
+      "drawnMeters": 23883
     },
     "kml": {
-      "parts": 214,
-      "drawnMeters": 15497
+      "parts": 116,
+      "drawnMeters": 9389
     },
     "regional-estimate": {
-      "parts": 70,
-      "drawnMeters": 3903
+      "parts": 14,
+      "drawnMeters": 913
     },
     "manual-ortho": {
       "parts": 1,
       "drawnMeters": 1473
     }
+  },
+  "osmAlignment": {
+    "date": "2026-10-04",
+    "method": "Route geometry follows connected OSM footway/cycleway/path/pedestrian ways, not rendered map pixels. Original operational stop sequence retained.",
+    "validation": {
+      "changedParts": 154,
+      "changedStops": 31,
+      "drawnMeters": 10000,
+      "originalMeters": 8997,
+      "from": {
+        "kml": 98,
+        "regional-estimate": 56
+      },
+      "maxJoinGap": 1.98,
+      "joinsOver3m": []
+    },
+    "remainingLaPiraLegs": [
+      13,
+      20
+    ],
+    "precision": "Coordinates align with OSM geometry; this does not certify current ground position or completeness."
   }
 }
