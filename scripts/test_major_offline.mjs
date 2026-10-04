@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+globalThis.window={};
+globalThis.speechSynthesis=undefined;
+eval(fs.readFileSync('major-network.js','utf8'));
+eval(fs.readFileSync('major-offline-nav.js','utf8'));
+const data=window.MAJOR_OFFLINE;
+if(!data?.routingRoads?.length) throw new Error('routingRoads missing');
+const targetRoad=data.roads.find(r=>(r.name||'').toLowerCase()==='via quattro novembre');
+if(!targetRoad) throw new Error('Via Quattro Novembre not found');
+const start=[44.5525,11.3450];
+const target=targetRoad.coords[0];
+const route=window.MajorOfflineNav.route(start,target);
+if(!route) throw new Error('No offline route from outside municipality to red route');
+if(route.points.length<10) throw new Error('Offline route too short / invalid');
+console.log(JSON.stringify({ok:true,routingRoads:data.routingRoads.length,distance:Math.round(route.distance),points:route.points.length,maneuvers:route.maneuvers.length,target}));
