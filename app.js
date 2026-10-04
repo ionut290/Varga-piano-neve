@@ -79,15 +79,31 @@ function majorCompletedMeters(r,rix=majorRi){return r.streets.reduce((sum,s,i)=>
 function renderMajorStreets(){const r=majorRoutes[majorRi],box=$('majorStreets');box.replaceChildren();if(!r)return;r.streets.forEach((s,i)=>{const key=majorKey(majorRi,i),b=document.createElement('button');b.className='stopItem'+(i===majorPi?' active':'')+(majorDone.has(key)?' done':'');b.innerHTML='<span class="stopNo">'+(majorDone.has(key)?'✓':i+1)+'</span><span class="stopText"><span>'+escapeText(s.name)+'</span><span class="streetMeters">'+fmtDist(s.meters)+' • '+fmtDist(s.meters*(r.passes||2))+' operativi</span></span>';b.onclick=()=>{majorPi=i;renderMajor()};box.appendChild(b)})}
 function renderMajor(){const r=majorRoutes[majorRi];if(!r){$('majorRouteInfo').textContent='Percorsi maggiori non disponibili';return}if(majorPi>=r.streets.length)majorPi=0;const s=r.streets[majorPi],doneMeters=majorCompletedMeters(r),pct=Math.round(doneMeters/r.totalMeters*100),left=r.totalMeters-doneMeters;$('majorPointName').textContent=s.name;$('majorProgressText').textContent=r.name+' • '+fmtDist(doneMeters*(r.passes||2))+' / '+fmtDist(r.totalMeters*(r.passes||2))+' operativi';$('majorProgressPct').textContent=pct+'%';$('majorProgressBar').style.width=pct+'%';$('majorRouteInfo').textContent='Tratto '+(majorPi+1)+'/'+r.streets.length+' • '+fmtDist(s.meters)+' ufficiali • ~'+fmtDist(s.meters*(r.passes||2))+' da percorrere sulle 2 corsie • ~'+fmtDist(left*(r.passes||2))+' operativi rimanenti';renderMajorStreets()}
 function majorSearchName(name){return name.replace(/\s*\+.*$/,'').replace(/\s*\(.*$/,'').replace(/^PARCH\.\s*/i,'').replace(/^PARCHEGGIO\s+/i,'').replace(/^PARCHEGGI\s+/i,'').trim()}
-let majorRoadNetwork=null,majorRoadLoading=null;
+let majorRoadNetwork=null,majorRoadLoading=null,majorBoundary=null,majorBoundaryLoading=null,majorBoundaryLayer=null;
 function normRoadName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\bf\.\s*lli\b/g,'fratelli').replace(/\bxxv\b/g,'25').replace(/\biv\b/g,'4').replace(/1\s*°?/g,'primo ').replace(/[^a-z0-9 ]+/g,' ').replace(/\b(via|viale|piazza|circonvallazione)\b/g,' ').replace(/\b[a-z]\b/g,' ').replace(/\s+/g,' ').trim()}
 function roadNameScore(a,b){const A=new Set(normRoadName(a).split(' ').filter(Boolean)),B=new Set(normRoadName(b).split(' ').filter(Boolean));if(!A.size||!B.size)return 0;let hit=0;A.forEach(x=>{if(B.has(x))hit++});return hit/Math.max(A.size,B.size)}
+async function loadMajorBoundary(){
+ if(majorBoundary)return majorBoundary;if(majorBoundaryLoading)return majorBoundaryLoading;
+ majorBoundaryLoading=(async()=>{const u='https://nominatim.openstreetmap.org/search?format=geojson&polygon_geojson=1&limit=5&countrycodes=it&q='+encodeURIComponent('Comune di Castel Maggiore, Bologna, Italia');const j=await fetch(u,{headers:{'Accept-Language':'it'}}).then(r=>r.json());const f=(j.features||[]).find(x=>x.geometry&&(x.geometry.type==='Polygon'||x.geometry.type==='MultiPolygon'));if(!f)throw new Error('Confine comunale non disponibile');majorBoundary=f.geometry;if(!majorBoundaryLayer){majorBoundaryLayer=L.geoJSON(f,{style:{color:'#111',weight:3,opacity:.8,fill:false,dashArray:'8 6'},interactive:false}).addTo(map)}return majorBoundary})().finally(()=>{majorBoundaryLoading=null});return majorBoundaryLoading
+}
+function pointInRing(p,ring){const x=p[1],y=p[0];let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1],cross=((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/((yj-yi)||1e-12)+xi);if(cross)inside=!inside}return inside}
+function pointInBoundary(p){if(!majorBoundary)return false;const polys=majorBoundary.type==='Polygon'?[majorBoundary.coordinates]:majorBoundary.coordinates;for(const poly of polys){if(!poly?.[0]||!pointInRing(p,poly[0]))continue;let inHole=false;for(let i=1;i<poly.length;i++)if(pointInRing(p,poly[i])){inHole=true;break}if(!inHole)return true}return false}
+function boundaryEdges(){if(!majorBoundary)return[];const polys=majorBoundary.type==='Polygon'?[majorBoundary.coordinates]:majorBoundary.coordinates,edges=[];for(const poly of polys)for(const ring of poly)for(let i=1;i<ring.length;i++)edges.push([[ring[i-1][1],ring[i-1][0]],[ring[i][1],ring[i][0]]]);return edges}
+function segmentIntersectionT(a,b,c,d){const ax=a[1],ay=a[0],bx=b[1],by=b[0],cx=c[1],cy=c[0],dx=d[1],dy=d[0],rx=bx-ax,ry=by-ay,sx=dx-cx,sy=dy-cy,den=rx*sy-ry*sx;if(Math.abs(den)<1e-12)return null;const qx=cx-ax,qy=cy-ay,t=(qx*sy-qy*sx)/den,u=(qx*ry-qy*rx)/den;return t>=0&&t<=1&&u>=0&&u<=1?t:null}
+function interp(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}
+function clipMajorCoords(coords){
+ if(!majorBoundary||!coords?.length)return[];const edges=boundaryEdges(),parts=[],pushPart=p=>{if(p.length>1)parts.push(p)};
+ let current=[];
+ for(let i=1;i<coords.length;i++){const a=coords[i-1],b=coords[i],ts=[0,1];for(const e of edges){const t=segmentIntersectionT(a,b,e[0],e[1]);if(t!==null&&t>1e-8&&t<1-1e-8)ts.push(t)}ts.sort((x,y)=>x-y);
+  for(let k=1;k<ts.length;k++){const t0=ts[k-1],t1=ts[k],m=interp(a,b,(t0+t1)/2);if(pointInBoundary(m)){const p0=interp(a,b,t0),p1=interp(a,b,t1);if(!current.length)current.push(p0);else{const last=current[current.length-1];if(Math.abs(last[0]-p0[0])>1e-8||Math.abs(last[1]-p0[1])>1e-8){pushPart(current);current=[p0]}}current.push(p1)}else if(current.length){pushPart(current);current=[]}}
+ }if(current.length)pushPart(current);return parts
+}
 async function loadMajorRoadNetwork(){
  if(majorRoadNetwork)return majorRoadNetwork;if(majorRoadLoading)return majorRoadLoading;
- majorRoadLoading=(async()=>{const q='[out:json][timeout:45];way["highway"]["name"](44.53,11.29,44.61,11.43);out tags geom;';const urls=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];let data=null;
+ majorRoadLoading=(async()=>{await loadMajorBoundary();const q='[out:json][timeout:45];area["boundary"="administrative"]["admin_level"="8"]["name"="Castel Maggiore"]->.a;way(area.a)["highway"]["name"];out tags geom;';const urls=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];let data=null;
  for(const url of urls){try{const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(q)});if(res.ok){data=await res.json();break}}catch(e){}}
  if(!data)throw new Error('Reticolo stradale OSM non disponibile');
- majorRoadNetwork=(data.elements||[]).filter(x=>x.type==='way'&&x.tags?.name&&x.geometry?.length>1).map(x=>({id:x.id,name:x.tags.name,coords:x.geometry.map(p=>[p.lat,p.lon])}));
+ majorRoadNetwork=(data.elements||[]).filter(x=>x.type==='way'&&x.tags?.name&&x.geometry?.length>1).flatMap(x=>clipMajorCoords(x.geometry.map(p=>[p.lat,p.lon])).map((coords,n)=>({id:x.id+'-'+n,name:x.tags.name,coords}))).filter(x=>x.coords.length>1);
  return majorRoadNetwork})().finally(()=>{majorRoadLoading=null});return majorRoadLoading
 }
 function findMajorWays(street){
@@ -105,11 +121,11 @@ function addMajorArrow(coords,color){
 }
 function majorColor(r){return r.code==='rosso'?'#d83f3f':r.code==='blu'?'#1976d2':'#d4a900'}
 function drawMajorWayPair(coords,r,s,active=true){
- const color=majorColor(r),a=offsetRoad(coords,2.4),b=offsetRoad(coords,-2.4).reverse(),popup='<b>'+escapeText(s.name)+'</b><br>'+r.name+' • '+fmtDist(s.meters)+'<br><b>Doppio passaggio:</b> una corsia per senso di marcia';
- L.polyline(a,{color,weight:active?6:4,opacity:active?1:.7}).addTo(routeLayer).bindPopup(popup);
- L.polyline(b,{color,weight:active?6:4,opacity:active?1:.7,dashArray:'10 7'}).addTo(routeLayer).bindPopup(popup);
- if(active){addMajorArrow(a,color);addMajorArrow(b,color)}
- return[a,b]
+ const color=majorColor(r),popup='<b>'+escapeText(s.name)+'</b><br>'+r.name+' • '+fmtDist(s.meters)+'<br><b>Doppio passaggio:</b> una corsia per senso di marcia<br><b>Limite:</b> solo Comune di Castel Maggiore',drawn=[];
+ const centers=clipMajorCoords(coords);for(const center of centers){const aParts=clipMajorCoords(offsetRoad(center,2.4)),bParts=clipMajorCoords(offsetRoad(center,-2.4)).map(x=>x.slice().reverse());
+  for(const a of aParts){L.polyline(a,{color,weight:active?6:4,opacity:active?1:.7}).addTo(routeLayer).bindPopup(popup);drawn.push(a);if(active)addMajorArrow(a,color)}
+  for(const b of bParts){L.polyline(b,{color,weight:active?6:4,opacity:active?1:.7,dashArray:'10 7'}).addTo(routeLayer).bindPopup(popup);drawn.push(b);if(active)addMajorArrow(b,color)}
+ }return drawn
 }
 async function fallbackMajorPoint(r,s){const p=await geocode(majorSearchName(s.searchName||s.name));if(!p)return null;L.circleMarker(p,{radius:11,color:'#fff',weight:4,fillColor:majorColor(r),fillOpacity:1}).addTo(routeLayer).bindPopup('<b>'+escapeText(s.name)+'</b><br>'+r.name+' • '+fmtDist(s.meters)+'<br>Geometria stradale da verificare');return p}
 async function focusMajorStreet(){
