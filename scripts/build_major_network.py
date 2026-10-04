@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# trigger-build
+# trigger-pr-build
 import json, time, sys, requests
 from pathlib import Path
 from shapely.geometry import shape, LineString, MultiLineString, GeometryCollection
