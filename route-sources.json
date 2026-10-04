@@ -1,0 +1,37 @@
+{
+  "snapshot": "2026-10-04",
+  "osm": "OpenStreetMap footway/cycleway/path/pedestrian ways, ODbL",
+  "regional": "DBTR ACP/ACI WMS areas, CC BY 4.0, lines estimated from raster areas",
+  "regionalWms": "https://servizigis.regione.emilia-romagna.it/wms/dbtr",
+  "sourceList": "Elenco operativo viabilità minore fornito dall’utente; documento salvato nel novembre 2023",
+  "streetViewChecks": [
+    "Via Bondanello: incrocio Repubblica e accesso camminamento distretto; immagini luglio 2026",
+    "Scuola via Emanuela Loi: ingresso individuato; percorso da completare separatamente"
+  ],
+  "validation": {
+    "stats": {
+      "osm": {
+        "parts": 239,
+        "sourceMeters": 14946,
+        "drawnMeters": 15173
+      },
+      "kml": {
+        "parts": 197,
+        "sourceMeters": 13077,
+        "drawnMeters": 13077
+      },
+      "regional-estimate": {
+        "parts": 75,
+        "sourceMeters": 3911,
+        "drawnMeters": 4065
+      },
+      "transfer-or-road": {
+        "parts": 18,
+        "sourceMeters": 2453,
+        "drawnMeters": 2453
+      }
+    },
+    "outsideRasterSamples": 0
+  },
+  "remaining": "Original KML parts do not certify sidewalks. Via Loi, Gramsci Galliera–Matteotti and former elementary school require coverage verification."
+}

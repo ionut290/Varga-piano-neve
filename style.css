@@ -3,3 +3,5 @@
 .surfaceLegend{display:grid;gap:6px;margin:12px 0;font-size:14px;color:#c3d2dc}.surfaceLegend label{display:flex;align-items:center;gap:8px}.surfaceLegend input{width:18px;height:18px}.surfaceLegend small{font-size:13px;line-height:1.4}
 
 .workInstruction{margin:12px 0;line-height:1.45}.workInstruction b{color:#eef6fb}.workInstruction p{margin:5px 0}#routeChecksDetails{margin:12px 0;line-height:1.45}#routeChecksDetails summary{cursor:pointer;font-weight:600}#routeChecks{padding-left:22px}#routeChecks li{margin:8px 0}
+
+.streetViewBtn{width:100%;padding:9px;margin:4px 0;font-size:12px;background:#243c4d;color:#eef6fb}
