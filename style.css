@@ -60,3 +60,22 @@
 
 .startupCard>div{display:grid;gap:10px}.startupCard>div[hidden]{display:none!important}.startupCard .routePick{min-height:58px;font-size:15px}.chooserBack{justify-self:start;background:#213743;color:#dce8ef;padding:8px 12px;min-height:38px}.startupCard>b,.startupCard>div>b{font-size:21px}.startupCard small{color:#91a6b3}
 @media(max-width:799px){.startupCard .routePick{min-height:54px;font-size:14px}.startupCard>div{gap:9px}}
+
+/* Build 38: pannello operativo minimale. I dettagli restano dietro ⋯ */
+#major{position:relative;padding-top:2px}
+#major>.operatorMoreBtn{position:absolute;right:0;top:-48px;z-index:1700;width:42px;height:42px;padding:0;border-radius:13px;background:#213743;color:#fff;font-size:25px;line-height:1}
+#major>.operatorMoreBtn[aria-expanded="true"]{background:#315062}
+#major>.majorStateAction{margin:0}
+#major>.majorMoreMenu{position:absolute;right:0;bottom:64px;top:auto;width:min(430px,calc(100vw - 28px));max-height:min(68vh,620px);overflow:auto;display:grid;gap:9px;padding:12px;border:1px solid #2d4655;border-radius:16px;background:rgba(8,20,29,.985);box-shadow:0 14px 38px #000a;z-index:1800}
+#major>.majorMoreMenu[hidden]{display:none!important}
+#major>.majorMoreMenu .majorTop{display:block}
+#major>.majorMoreMenu .progress{margin:0 0 8px}
+#major>.majorMoreMenu #majorStreets{max-height:220px}
+#major>.majorMoreMenu button{width:100%;min-height:42px}
+#panel:has(#major:not([hidden])){padding:10px;background:rgba(8,19,29,.94);overflow:visible}
+@media(max-width:799px){
+  #panel:has(#major:not([hidden])){max-height:none;padding:8px;border-radius:18px}
+  #major>.operatorMoreBtn{top:-44px;width:38px;height:38px;font-size:23px}
+  #major>.majorMoreMenu{bottom:58px;width:calc(100vw - 36px);max-height:62vh;padding:10px}
+  #major>.majorMoreMenu #majorStreets{max-height:150px}
+}
