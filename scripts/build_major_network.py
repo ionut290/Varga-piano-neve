@@ -38,6 +38,7 @@ allowed={
  "residential","living_street","service","road","track"
 }
 roads=[]
+routing_roads=[]
 with SOURCE.open("r",encoding="utf-8") as fh:
     for raw in fh:
         raw=raw.strip().lstrip("\x1e")
@@ -68,6 +69,20 @@ with SOURCE.open("r",encoding="utf-8") as fh:
             if len(line_coords)<2:
                 continue
             line=LineString(line_coords)
+            rid=str(props.get("@id") or props.get("id") or f"road-{len(routing_roads)}")
+            full_latlon=[[round(lat,7),round(lon,7)] for lon,lat in line.coords]
+            if len(full_latlon)>=2:
+                routing_roads.append({
+                    "id":f"{rid}-routing",
+                    "name":props.get("name",""),
+                    "ref":props.get("ref",""),
+                    "highway":hw,
+                    "oneway":props.get("oneway",""),
+                    "maxspeed":props.get("maxspeed",""),
+                    "access":props.get("access",""),
+                    "motor_vehicle":props.get("motor_vehicle",""),
+                    "coords":full_latlon
+                })
             clipped=line.intersection(boundary)
             parts=[]
             if isinstance(clipped,LineString):
@@ -81,7 +96,6 @@ with SOURCE.open("r",encoding="utf-8") as fh:
                 if len(cs)<2:
                     continue
                 latlon=[[round(lat,7),round(lon,7)] for lon,lat in cs]
-                rid=str(props.get("@id") or props.get("id") or f"road-{len(roads)}")
                 roads.append({
                     "id":f"{rid}-{n}",
                     "name":props.get("name",""),
@@ -95,11 +109,12 @@ with SOURCE.open("r",encoding="utf-8") as fh:
                 })
 
 payload={
- "version":2,
- "source":"OpenStreetMap Geofabrik Nord-Est, clipped to Castel Maggiore relation 43303 at build time",
+ "version":3,
+ "source":"OpenStreetMap Geofabrik Nord-Est, operational roads clipped to Castel Maggiore relation 43303; transfer routing stored from expanded local extract",
  "boundary":boundary_geom,
- "roads":roads
+ "roads":roads,
+ "routingRoads":routing_roads
 }
 text="// Generated file: offline road network for Castel Maggiore. Do not edit manually.\nwindow.MAJOR_OFFLINE="+json.dumps(payload,separators=(",",":"),ensure_ascii=False)+";\n"
 OUT.write_text(text,encoding="utf-8")
-print(f"Wrote {OUT}: {len(roads)} road parts, {OUT.stat().st_size} bytes")
+print(f"Wrote {OUT}: {len(roads)} operational road parts, {len(routing_roads)} routing road parts, {OUT.stat().st_size} bytes")
