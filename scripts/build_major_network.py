@@ -35,7 +35,7 @@ if not SOURCE.exists():
 allowed={
  "motorway","motorway_link","trunk","trunk_link","primary","primary_link",
  "secondary","secondary_link","tertiary","tertiary_link","unclassified",
- "residential","living_street","service","road"
+ "residential","living_street","service","road","track"
 }
 roads=[]
 with SOURCE.open("r",encoding="utf-8") as fh:
@@ -51,9 +51,10 @@ with SOURCE.open("r",encoding="utf-8") as fh:
         hw=props.get("highway")
         if hw not in allowed:
             continue
-        if props.get("access") in {"no","private"} and props.get("motor_vehicle") not in {"yes","designated"}:
-            continue
-        if props.get("motor_vehicle") in {"no","private"}:
+        # Keep named/official local roads even when OSM marks generic access limits:
+        # the municipal antigelo route may legitimately include them. Runtime routing
+        # will still respect the access fields below for transfer navigation.
+        if hw=="track" and not props.get("name"):
             continue
         geom=feat.get("geometry") or {}
         gtype=geom.get("type")
@@ -88,6 +89,8 @@ with SOURCE.open("r",encoding="utf-8") as fh:
                     "highway":hw,
                     "oneway":props.get("oneway",""),
                     "maxspeed":props.get("maxspeed",""),
+                    "access":props.get("access",""),
+                    "motor_vehicle":props.get("motor_vehicle",""),
                     "coords":latlon
                 })
 
