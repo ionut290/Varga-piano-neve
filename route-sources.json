@@ -83,5 +83,23 @@
       20
     ],
     "precision": "Coordinates align with OSM geometry; this does not certify current ground position or completeness."
+  },
+  "institutionReview": {
+    "date": "2026-10-04",
+    "officialAddresses": {
+      "PAS / Biblioteca N. Ginzburg": "via Bondanello 39 (sede attuale 2026; elenco storico riportava via Bondanello 30)",
+      "Scuola Donini Pelagalli": "via Bondanello 28",
+      "Scuola primaria Bassi": "via Gramsci 175",
+      "Scuola primaria Levi": "via I Maggio 10",
+      "Scuola primaria Bertolini": "via Curiel 15",
+      "Scuola primaria Calvino": "via Resistenza 20",
+      "Scuola materna Villa Salina": "via I Maggio 8",
+      "Scuola materna Bonfiglioli": "via Conti 14",
+      "Centro Giovanile": "via Amendola 1",
+      "Centro Sociale Pertini": "via Lirone 30",
+      "Distretto Sanitario / Bucaneve": "Piazza II Agosto 1980",
+      "Centro Diurno Casa del Ciliegio": "via Ungaretti 1"
+    },
+    "note": "I marker istituzionali vengono separati dall'inizio geometrico della tappa. Gli accessi non verificati non vengono inventati: richiedono geometria pedonale/ortofoto attendibile."
   }
 }
