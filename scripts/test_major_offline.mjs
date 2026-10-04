@@ -1,3 +1,4 @@
+// trigger validation build
 import fs from 'node:fs';
 globalThis.window={};
 globalThis.speechSynthesis=undefined;

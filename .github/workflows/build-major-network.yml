@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - "scripts/build_major_network.py"
+      - "scripts/test_major_offline.mjs"
       - ".github/workflows/build-major-network.yml"
   pull_request:
     branches: [main]
     paths:
       - "scripts/build_major_network.py"
+      - "scripts/test_major_offline.mjs"
       - ".github/workflows/build-major-network.yml"
   workflow_dispatch:
 
