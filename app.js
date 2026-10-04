@@ -46,7 +46,7 @@ function stopMarkerPoint(rix,i){return window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.
 function drawSegment(layer,rix,i,options){
  const s=routes[rix].segments[i],minor=currentMode==='minor';
  const parts=minor?surfaceParts(rix,i):[{coords:s.coords,matched:true}];
- const excluded=window.SURFACE_ROUTES?.[rix]?.[i]?.excluded;
+ const excluded=window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.excluded;
  if(minor&&excluded)return;
  if(minor&&$('originalTrace')?.checked)L.polyline(s.coords,{color:'#673ab7',weight:2,opacity:.8,interactive:false}).addTo(layer);
  parts.forEach(part=>L.polyline(part.coords,{...options,color:minor&&!part.matched?'#e53935':options.color,weight:minor?Math.min(options.weight,part.matched?3:5):options.weight,dashArray:minor?(part.source==='regional-estimate'?'2 3':!part.matched?'8 7':null):null}).addTo(layer).bindPopup('<b>'+s.name+'</b><br>'+routes[rix].name+'<br>'+(minor?(part.source==='manual-ortho'?'Linea ricalcata manualmente sulla pista visibile nell’ortofoto Regione 2023–24 • condizioni attuali da verificare':part.source==='regional-estimate'?'Linea stimata dalle aree pedonali/ciclabili regionali • da verificare':part.matched?'Linea agganciata ai percorsi pedonali/ciclabili OSM • condizioni sul posto da verificare':excluded?'Spostamento o intervento stradale • KML originale':'KML originale • posizione da verificare'):'Tracciato KML')+(minor?instructionPopup(rix,i):'')));
@@ -57,7 +57,7 @@ function drawRoute(focus=true){
  const pieces=surfaceParts(ri,pi),matches=pieces.filter(p=>p.matched).length,regional=pieces.filter(p=>p.source==='regional-estimate').length,manual=pieces.some(p=>p.source==='manual-ortho');
  $('routeInfo').textContent=r.name+' • '+r.segments.length+' tratti • '+matches+'/'+pieces.length+' parti adattate nella tappa'+(manual?' • ricalcata su ortofoto 2023–24':'')+(regional?' • '+regional+' stimate da aree Regione':'');
  r.segments.forEach((s,i)=>{
-  if(currentMode==='minor'&&window.SURFACE_ROUTES?.[ri]?.[i]?.excluded)return;
+  if(currentMode==='minor'&&window.REBUILT_MINOR_ROUTES?.[ri]?.[i]?.excluded)return;
   const complete=done.has(ri+'-'+i),active=i===pi;
   drawSegment(routeLayer,ri,i,{color:complete?'#20bd62':active?'#ff9800':'#71808a',weight:active?10:7,opacity:.92});
   const point=stopMarkerPoint(ri,i);
