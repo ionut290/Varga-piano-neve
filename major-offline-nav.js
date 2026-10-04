@@ -12,6 +12,8 @@
     const addNode=p=>{const k=key(p);if(!nodes.has(k)){nodes.set(k,[+p[0],+p[1]]);adj.set(k,[])}return k};
     const addEdge=(a,b,w,name,roadId)=>adj.get(a).push({to:b,w,name:name||'',roadId});
     for(const road of data.roads||[]){
+      const access=String(road.access||'').toLowerCase(),motor=String(road.motor_vehicle||'').toLowerCase();
+      if((access==='no'||access==='private'||motor==='no'||motor==='private')&&motor!=='yes'&&motor!=='designated')continue;
       const pts=road.coords||[],ow=oneWayMode(road.oneway);
       for(let i=1;i<pts.length;i++){
         const a=addNode(pts[i-1]),b=addNode(pts[i]),w=distance(pts[i-1],pts[i]);
