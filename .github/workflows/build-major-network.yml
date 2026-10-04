@@ -44,6 +44,8 @@ jobs:
         env:
           ROADS_GEOJSONSEQ: /tmp/roads.geojsonseq
         run: python scripts/build_major_network.py
+      - name: Test offline routing from outside municipality
+        run: node scripts/test_major_offline.mjs
       - name: Commit generated network
         run: |
           if git diff --quiet -- major-network.js; then
