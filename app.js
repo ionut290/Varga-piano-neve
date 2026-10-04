@@ -167,7 +167,7 @@ function drawMajorWayPair(coords,r,s,active=true){
   for(const b of bParts){L.polyline(b,{color,weight:active?6:4,opacity:active?1:.7,dashArray:'10 7'}).addTo(routeLayer).bindPopup(popup);drawn.push(b);if(active)addMajorArrow(b,color)}
  }return drawn
 }
-async function fallbackMajorPoint(r,s){await loadMajorBoundary();const p=await geocode(majorSearchName(s.searchName||s.name));if(!p||!pointInBoundary(p))return null;L.circleMarker(p,{radius:11,color:'#fff',weight:4,fillColor:majorColor(r),fillOpacity:1}).addTo(routeLayer).bindPopup('<b>'+escapeText(s.name)+'</b><br>'+r.name+' • '+fmtDist(s.meters)+'<br>Geometria stradale da verificare • dentro Castel Maggiore');return p}
+async function fallbackMajorPoint(r,s){await loadMajorRoadNetwork();const target=majorSearchName(s.searchName||s.name),scored=majorRoadNetwork.map(w=>({w,score:roadNameScore(target,w.name)})).sort((a,b)=>b.score-a.score),w=scored[0]?.score>=.35?scored[0].w:null;if(!w?.coords?.length)return null;const p=w.coords[Math.floor(w.coords.length/2)];L.circleMarker(p,{radius:11,color:'#fff',weight:4,fillColor:majorColor(r),fillOpacity:1}).addTo(routeLayer).bindPopup('<b>'+escapeText(s.name)+'</b><br>'+r.name+' • '+fmtDist(s.meters)+'<br>Posizione ricavata dal reticolo offline');return p}
 async function focusMajorStreet(){
  const r=majorRoutes[majorRi],s=r?.streets?.[majorPi];if(!s)return;routeLayer.clearLayers();$('majorRouteInfo').textContent='Carico la strada e preparo andata + ritorno…';
  try{await loadMajorRoadNetwork();const ways=findMajorWays(s),bounds=[];ways.forEach(w=>drawMajorWayPair(w.coords,r,s,true).forEach(x=>bounds.push(...x)));if(bounds.length){map.fitBounds(bounds,{padding:[35,35],maxZoom:17});$('majorRouteInfo').textContent='Doppio passaggio • '+s.name+' • '+fmtDist(s.meters)+' • entrambe le corsie'}else{const p=await fallbackMajorPoint(r,s);if(p){map.setView(p,17);$('majorRouteInfo').textContent='Strada localizzata; asse OSM da verificare prima del doppio passaggio'}else $('majorRouteInfo').textContent='Strada non trovata automaticamente • '+s.name}}catch(e){const p=await fallbackMajorPoint(r,s);if(p)map.setView(p,17);$('majorRouteInfo').textContent='Reticolo stradale non disponibile: mostrata posizione indicativa'}
@@ -178,7 +178,7 @@ async function showMajorRoute(){
   r.streets.forEach((s,i)=>{const ways=findMajorWays(s);if(ways.length){matched++;ways.forEach(w=>drawMajorWayPair(w.coords,r,s,i===majorPi).forEach(x=>bounds.push(...x))) }});
   if(bounds.length)map.fitBounds(bounds,{padding:[30,30],maxZoom:15});
   $('majorRouteInfo').textContent=r.name+' • '+matched+'/'+r.streets.length+' voci agganciate al reticolo stradale • doppio passaggio su entrambe le corsie';
- }catch(e){$('majorRouteInfo').textContent='Impossibile caricare il reticolo stradale • '+(e?.message||'errore rete')}
+ }catch(e){$('majorRouteInfo').textContent='Reticolo offline non disponibile • '+(e?.message||'file mancante')}
 }
 
 const majorCoverageLayer=L.layerGroup().addTo(map);
