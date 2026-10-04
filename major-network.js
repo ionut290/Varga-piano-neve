@@ -1,0 +1,1 @@
+// Placeholder replaced by the offline network generator.\nwindow.MAJOR_OFFLINE={version:0,source:'pending',boundary:null,roads:[]};\n
