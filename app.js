@@ -23,6 +23,27 @@ function instructionPopup(rix,i){const note=stopInstruction(rix,i);return note?'
 function renderInstructions(){ $('workInstruction').textContent=stopInstruction(ri,pi);const box=$('routeChecks');box.replaceChildren();const issues=window.ROUTE_INSTRUCTIONS?.issues?.[ri]||[];$('routeChecksDetails').hidden=!issues.length;issues.forEach(note=>{const item=document.createElement('li');item.textContent=note;box.appendChild(item)})}
 function surfaceParts(rix,i){return window.SURFACE_ROUTES?.[rix]?.[i]?.parts||[{coords:routes[rix].segments[i].coords,matched:false}]}
 function surfaceStart(rix,i){return surfaceParts(rix,i)[0]?.coords[0]||routes[rix].segments[i].coords[0]}
+const stopEntrances={
+ "0-2":[44.5772966,11.3582505],
+ "0-3":[44.5777438,11.3580944],
+ "0-4":[44.5790124,11.3587355],
+ "0-5":[44.5777442,11.3569505],
+ "0-6":[44.5782438,11.3568768],
+ "0-7":[44.5795743,11.3558244],
+ "0-9":[44.5802846,11.3585958],
+ "1-3":[44.5741556,11.3598662],
+ "1-5":[44.5756664,11.3642595],
+ "1-6":[44.575504,11.3649328],
+ "1-8":[44.5801351,11.3626448],
+ "1-9":[44.5746195,11.3645997],
+ "1-12":[44.5750023,11.3654988],
+ "2-1":[44.5526334,11.3249917],
+ "2-2":[44.5565516,11.3185115],
+ "2-4":[44.5545065,11.3179643],
+ "2-9":[44.5543218,11.3526711],
+ "2-12":[44.5551671,11.353223]
+};
+function stopMarkerPoint(rix,i){return stopEntrances[rix+'-'+i]||surfaceStart(rix,i)}
 function drawSegment(layer,rix,i,options){
  const s=routes[rix].segments[i],minor=currentMode==='minor';
  const parts=minor?surfaceParts(rix,i):[{coords:s.coords,matched:true}];
@@ -39,7 +60,7 @@ function drawRoute(focus=true){
   const complete=done.has(ri+'-'+i),active=i===pi;
   drawSegment(routeLayer,ri,i,{color:complete?'#20bd62':active?'#ff9800':'#71808a',weight:active?10:7,opacity:.92});
   if(s.coords.length){
-   bounds.push(...s.coords);const point=surfaceStart(ri,i);
+   bounds.push(...s.coords);const point=stopMarkerPoint(ri,i);
    const marker=L.marker(point,{icon:L.divIcon({className:'routePin '+(complete?'done ':'')+(active?'active':''),html:'<span>'+(i+1)+'</span>',iconSize:[30,30],iconAnchor:[15,15]})}).addTo(routeLayer);
    marker.bindPopup('<b>'+(i+1)+'. '+s.name+'</b><br>'+r.name+instructionPopup(ri,i));marker.on('click',()=>{pi=i;drawRoute(false);focusStop()});
   }
