@@ -1,6 +1,14 @@
 const map=L.map('map',{zoomControl:false}).setView([44.4949,11.3426],13);const streetMap=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:21,maxNativeZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 const satelliteMap=L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:21,maxNativeZoom:19,attribution:'Immagini © Esri, Maxar, Earthstar Geographics e fornitori'});
-L.control.layers({'Mappa':streetMap,'Satellite':satelliteMap},null,{position:'topright',collapsed:false}).addTo(map);
+map.createPane('officialPaths');map.getPane('officialPaths').style.zIndex=350;
+const regionalWms='https://servizigis.regione.emilia-romagna.it/wms/dbtr';
+const officialOptions={format:'image/png',transparent:true,version:'1.1.1',minZoom:16,maxZoom:21,pane:'officialPaths',attribution:'DBTR © Regione Emilia-Romagna · CC BY 4.0'};
+const officialFootways=L.tileLayer.wms(regionalWms,{...officialOptions,layers:'ACP_Area_di_circolazione_pedonale'});
+const officialCycleways=L.tileLayer.wms(regionalWms,{...officialOptions,layers:'ACI_Area_di_circolazione_ciclabile,EPC_Elemento_di_percorso_ciclabile'});
+L.control.layers({'Mappa':streetMap,'Satellite':satelliteMap},{'Aree pedonali · Regione':officialFootways,'Piste ciclabili · Regione':officialCycleways},{position:'topright',collapsed:true}).addTo(map);
+let officialErrorShown=false;
+[officialFootways,officialCycleways].forEach(layer=>layer.on('tileerror',()=>{if(!officialErrorShown&&currentMode==='minor'){officialErrorShown=true;$('officialInfo').textContent='Cartografia regionale non disponibile: restano visibili il percorso e la mappa di base.'}}));
+
 L.control.zoom({position:'topright'}).addTo(map);
 const routes=(window.KML_ROUTES||[]).map(r=>({name:r.name,segments:r.segments,points:r.segments.map(s=>s.name)}));let ri=0,pi=0,currentMode="major";const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null;
 async function roadRoute(a,b){try{const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson&steps=true';const j=await fetch(u).then(r=>r.json());if(j.routes&&j.routes[0])return j.routes[0]}catch(e){}return null}
