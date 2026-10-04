@@ -8,7 +8,18 @@
     "Via Bondanello: incrocio Repubblica e accesso camminamento distretto; immagini luglio 2026",
     "Scuola via Emanuela Loi: ingresso individuato; percorso da completare separatamente"
   ],
-  "validation": {
+  "remaining": "Original KML parts do not certify sidewalks. Via Loi, Gramsci Galliera–Matteotti and former elementary school require coverage verification.",
+  "manualTraces": [
+    {
+      "route": 1,
+      "segment": 2,
+      "name": "Piste ciclabili di viale della Repubblica",
+      "method": "Manual tracing of both path centrelines and marked crossing on RER 2023–24 20 cm orthophoto",
+      "vertices": 122,
+      "status": "Aligned visually to 2023–24 imagery; not verified as a current survey"
+    }
+  ],
+  "priorAutomatedValidation": {
     "stats": {
       "osm": {
         "parts": 239,
@@ -33,5 +44,23 @@
     },
     "outsideRasterSamples": 0
   },
-  "remaining": "Original KML parts do not certify sidewalks. Via Loi, Gramsci Galliera–Matteotti and former elementary school require coverage verification."
+  "priorAutomatedValidationNote": "Historical validation before manual ortho tracing. Original-leg coverage counts are not the current route-part counts.",
+  "currentDrawnGeometry": {
+    "osm": {
+      "parts": 227,
+      "drawnMeters": 13821
+    },
+    "kml": {
+      "parts": 214,
+      "drawnMeters": 15497
+    },
+    "regional-estimate": {
+      "parts": 70,
+      "drawnMeters": 3903
+    },
+    "manual-ortho": {
+      "parts": 1,
+      "drawnMeters": 1473
+    }
+  }
 }
