@@ -15,39 +15,58 @@ const rebuiltNames=window.ROUTE_INSTRUCTIONS?.names||[];const rebuiltNotes=windo
 const majorRoutes=window.MAJOR_ROUTES||[];
 const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
 let ri=0,pi=0,majorRi=savedMajorRoute!==null&&Number.isInteger(+savedMajorRoute)&&+savedMajorRoute>=0&&+savedMajorRoute<majorRoutes.length?+savedMajorRoute:0,majorPi=0,currentMode="major",minorMapOpened=false;
-const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),majorDone=new Set(JSON.parse(localStorage.getItem('majorDone')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null,majorGuideLine=null,majorPauseMarker=null;const majorNav={mode:'idle',target:null,pausePoint:null,resumeMode:null,resumeTarget:null};
+const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),majorDone=new Set(JSON.parse(localStorage.getItem('majorDone')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null,majorGuideLine=null,majorPauseMarker=null;const majorNav={mode:'idle',target:null,pausePoint:null,resumeMode:null,resumeTarget:null,path:[],maneuvers:[],pathIndex:0,lastVoiceKey:'',lastInsideStreet:null};
 async function roadRoute(a,b){try{const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson&steps=true';const j=await fetch(u).then(r=>r.json());if(j.routes&&j.routes[0])return j.routes[0]}catch(e){}return null}
 function fmtDist(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(1)+' km'}
 function navUpdate(ll){if(!navTarget)return;const meters=d(ll,navTarget);if($('routeInfo'))$('routeInfo').textContent='🧭 NAVIGAZIONE • '+fmtDist(meters)+' alla tappa '+(pi+1);if(meters<25){$('routeInfo').textContent='📍 ARRIVATO ALLA TAPPA '+(pi+1);navTarget=null}}
-function clearMajorNavLine(){if(navLine){routeLayer.removeLayer(navLine);navLine=null}navRoute=null}
+function clearMajorNavLine(){if(navLine){routeLayer.removeLayer(navLine);navLine=null}navRoute=null;majorNav.path=[];majorNav.maneuvers=[];majorNav.pathIndex=0}
 function clearMajorGuide(){if(majorGuideLine){routeLayer.removeLayer(majorGuideLine);majorGuideLine=null}}
+function setMajorNavHud(show,icon='↑',instruction='',distance='',street=''){const box=$('majorNavHud');if(!box)return;box.hidden=!show;if(!show)return;$('majorNavIcon').textContent=icon;$('majorNavInstruction').textContent=instruction;$('majorNavDistance').textContent=distance;$('majorNavStreet').textContent=street}
+function majorIcon(type){return type==='left'?'↰':type==='right'?'↱':type==='uturn'?'↶':type==='arrive'?'⚑':'↑'}
+function majorSpeak(text,key='',force=false){return window.MajorOfflineNav?.speak?.(text,key,force)||false}
 function majorRouteStartPoint(){if(!majorTracking.lanes.length)return null;let lanes=majorTracking.lanes.filter(x=>x.streetIndex===0);if(!lanes.length){const m=Math.min(...majorTracking.lanes.map(x=>x.streetIndex));lanes=majorTracking.lanes.filter(x=>x.streetIndex===m)}return lanes[0]?.coords?.[0]||null}
 function majorAllowedDistance(accuracy){return Math.max(14,Math.min(28,(Number.isFinite(accuracy)?accuracy:15)+6))}
+function nearestPathIndex(ll,points,startAt=0){if(!points?.length)return 0;let bi=Math.max(0,startAt-8),bd=Infinity;for(let i=Math.max(0,startAt-8);i<points.length;i++){const dd=d(ll,points[i]);if(dd<bd){bd=dd;bi=i}}return bi}
+function pathDistance(points,a,b){let m=0;for(let i=Math.max(1,a+1);i<=b&&i<points.length;i++)m+=d(points[i-1],points[i]);return m}
+function autoMajorView(ll,speed=0,remaining=0,inside=false){let z=18;if(!inside){z=remaining>1800?15:remaining>700?16:remaining>220?17:18}else if(Number.isFinite(speed)&&speed>13)z=17;map.setView(ll,z,{animate:true})}
+function transferGuidance(ll){
+ const pts=majorNav.path||[];if(!pts.length)return;majorNav.pathIndex=nearestPathIndex(ll,pts,majorNav.pathIndex);
+ const next=majorNav.maneuvers.find(m=>m.index>majorNav.pathIndex+1)||majorNav.maneuvers.at(-1);
+ if(!next)return;const remaining=d(ll,pts[majorNav.pathIndex]||ll)+pathDistance(pts,majorNav.pathIndex,next.index),distText=fmtDist(remaining);
+ const label=next.type==='arrive'?(majorNav.mode==='to-pause'?'Raggiungi il punto di pausa':'Raggiungi il percorso'):next.text;
+ setMajorNavHud(true,majorIcon(next.type),label,distText,next.name||'');
+ const stage=remaining<=35?'now':remaining<=140?'soon':'';if(stage){const key=next.index+':'+stage+':'+majorNav.mode;if(key!==majorNav.lastVoiceKey){majorNav.lastVoiceKey=key;const msg=stage==='now'?(next.type==='arrive'?label:'Ora, '+label.toLowerCase()):'Tra '+Math.max(30,Math.round(remaining/10)*10)+' metri, '+label.toLowerCase();majorSpeak(msg,key,true)}}
+}
 async function navigateMajorTo(from,target,mode,label){
- if(!from||!target)return false;majorNav.mode=mode;majorNav.target=target;clearMajorGuide();clearMajorNavLine();
- const rr=await roadRoute(from,target);if(rr){const pts=rr.geometry.coordinates.map(x=>[x[1],x[0]]);navLine=L.polyline(pts,{color:'#ff9800',weight:8,opacity:.95,dashArray:'12 7'}).addTo(routeLayer);navRoute=rr;$('majorRouteInfo').textContent='🧭 '+label+' • '+fmtDist(rr.distance)+' • circa '+Math.max(1,Math.round(rr.duration/60))+' min'}else{$('majorRouteInfo').textContent='🧭 '+label+' • '+fmtDist(d(from,target));navLine=L.polyline([from,target],{color:'#ff9800',weight:6,opacity:.85,dashArray:'10 8'}).addTo(routeLayer)}
- return true
+ if(!from||!target)return false;majorNav.mode=mode;majorNav.target=target;majorNav.lastVoiceKey='';clearMajorGuide();clearMajorNavLine();
+ const rr=window.MajorOfflineNav?.route?.(from,target);if(!rr){setMajorNavHud(true,'⚠','Percorso offline non disponibile','','');$('majorRouteInfo').textContent='Navigazione offline non disponibile: reticolo locale non collegato';return false}
+ majorNav.path=rr.points;majorNav.maneuvers=rr.maneuvers||[];majorNav.pathIndex=0;navRoute=rr;navLine=L.polyline(rr.points,{color:'#1677ff',weight:8,opacity:.96}).addTo(routeLayer);$('majorRouteInfo').textContent='🧭 '+label+' • '+fmtDist(rr.distance)+' • navigazione offline';transferGuidance(from);majorSpeak(label.toLowerCase(),'start-'+mode,true);return true
 }
 function startMajorInsideNavigation(ll,accuracy=15){
- clearMajorNavLine();majorNav.mode='inside';majorNav.target=null;resetTrackingJoin();updateMajorInsideGuide(ll,accuracy)
+ clearMajorNavLine();majorNav.mode='inside';majorNav.target=null;majorNav.lastInsideStreet=null;majorNav.lastVoiceKey='';resetTrackingJoin();updateMajorInsideGuide(ll,accuracy)
 }
 function updateMajorInsideGuide(ll,accuracy=15){
  const best=nearestMajorLanePoint(ll,majorTracking.lastRaw&&d(majorTracking.lastRaw,ll)>=3?headingDeg(majorTracking.lastRaw,ll):null);if(!best)return;
- clearMajorGuide();const lane=majorTracking.lanes[best.laneIndex],from=Math.max(0,best.segmentIndex),to=Math.min(lane.coords.length,from+8),ahead=[best.point,...lane.coords.slice(from+1,to)];if(ahead.length>1)majorGuideLine=L.polyline(ahead,{color:'#ff9800',weight:7,opacity:.9}).addTo(routeLayer);
- const street=majorRoutes[majorRi]?.streets?.[best.streetIndex];$('majorRouteInfo').textContent='🧭 SUL PERCORSO • continua su '+(street?.name||'tratto assegnato')
+ const allowed=majorAllowedDistance(accuracy),lane=majorTracking.lanes[best.laneIndex],street=majorRoutes[majorRi]?.streets?.[best.streetIndex],streetName=street?.name||'percorso assegnato';
+ if(best.dist>allowed*1.6){clearMajorGuide();setMajorNavHud(true,'⚠','Sei fuori dal percorso',fmtDist(best.dist),'Rientra sulla linea colorata');if(majorNav.lastVoiceKey!=='off-route'){majorNav.lastVoiceKey='off-route';majorSpeak('Sei fuori dal percorso. Rientra sulla linea assegnata.','off-route',true)}return}
+ clearMajorGuide();const from=Math.max(0,best.segmentIndex),to=Math.min(lane.coords.length,from+10),ahead=[best.point,...lane.coords.slice(from+1,to)];if(ahead.length>1)majorGuideLine=L.polyline(ahead,{color:'#ff9800',weight:7,opacity:.92}).addTo(routeLayer);
+ const nextStreet=majorRoutes[majorRi]?.streets?.[Math.min(best.streetIndex+1,(majorRoutes[majorRi]?.streets?.length||1)-1)]?.name||'';
+ setMajorNavHud(true,'↑','Continua su '+streetName,'',nextStreet&&nextStreet!==streetName?'Prossimo tratto: '+nextStreet:'Percorso '+(majorRoutes[majorRi]?.code||''));
+ if(majorNav.lastInsideStreet!==best.streetIndex){majorNav.lastInsideStreet=best.streetIndex;majorSpeak('Continua su '+streetName,'inside-'+best.streetIndex,true)}
+ $('majorRouteInfo').textContent='🧭 SUL PERCORSO • continua su '+streetName
 }
 async function beginMajorNavigation(ll,accuracy=15){
  const best=nearestMajorLanePoint(ll,null),allowed=majorAllowedDistance(accuracy);if(best&&best.dist<=allowed){startMajorInsideNavigation(ll,accuracy);return}
- const start=majorRouteStartPoint();if(start)await navigateMajorTo(ll,start,'to-start','VERSO INIZIO PERCORSO')
+ const start=majorRouteStartPoint();if(start)await navigateMajorTo(ll,start,'to-start','Verso inizio percorso')
 }
-async function updateMajorNavigation(ll,accuracy=15){
+async function updateMajorNavigation(ll,accuracy=15,speed=0){
  if(currentMode!=='major'||!mapState.active)return;
+ if(majorNav.mode==='paused'){setMajorNavHud(true,'⏸','Pausa','',majorNav.pausePoint?'Punto di ripresa memorizzato':'');return}
  if(majorNav.mode==='to-start'||majorNav.mode==='to-pause'){
-  if(!majorNav.target)return;const meters=d(ll,majorNav.target);map.panTo(ll);
-  if(meters<=25){const wasPause=majorNav.mode==='to-pause';majorNav.target=null;clearMajorNavLine();if(wasPause&&majorPauseMarker){routeLayer.removeLayer(majorPauseMarker);majorPauseMarker=null}if(wasPause&&majorNav.resumeMode==='to-start'&&majorNav.resumeTarget){const target=[...majorNav.resumeTarget];majorNav.resumeMode=null;majorNav.resumeTarget=null;await navigateMajorTo(ll,target,'to-start','VERSO INIZIO PERCORSO')}else{majorNav.resumeMode=null;majorNav.resumeTarget=null;startMajorInsideNavigation(ll,accuracy);$('majorRouteInfo').textContent=wasPause?'📍 Rientrato al punto di pausa • riprendo il percorso':'📍 Raggiunto il percorso • inizio navigazione interna'}}else $('majorRouteInfo').textContent=(majorNav.mode==='to-pause'?'↩ RITORNO AL PUNTO DI PAUSA • ':'🧭 VERSO INIZIO PERCORSO • ')+fmtDist(meters);
-  return
+  if(!majorNav.target)return;const meters=d(ll,majorNav.target);transferGuidance(ll);autoMajorView(ll,speed,meters,false);
+  if(meters<=25){const wasPause=majorNav.mode==='to-pause';majorNav.target=null;clearMajorNavLine();if(wasPause&&majorPauseMarker){routeLayer.removeLayer(majorPauseMarker);majorPauseMarker=null}if(wasPause&&majorNav.resumeMode==='to-start'&&majorNav.resumeTarget){const target=[...majorNav.resumeTarget];majorNav.resumeMode=null;majorNav.resumeTarget=null;await navigateMajorTo(ll,target,'to-start','Verso inizio percorso')}else{majorNav.resumeMode=null;majorNav.resumeTarget=null;startMajorInsideNavigation(ll,accuracy);majorSpeak(wasPause?'Sei tornato al punto di pausa. Riprendo il percorso.':'Sei arrivato al percorso. Inizio navigazione interna.','arrived-'+(wasPause?'pause':'route'),true)}}return
  }
- if(majorNav.mode==='inside'){updateMajorInsideGuide(ll,accuracy);map.panTo(ll)}
+ if(majorNav.mode==='inside'){updateMajorInsideGuide(ll,accuracy);autoMajorView(ll,speed,0,true)}
 }
 function qFor(s){return s.replace(/^Trebbo:\s*/,'').replace(/^1° Maggio:\s*/,'').replace(/\s*[–-].*$/,'')+', Castel Maggiore, Bologna, Italia'}
 async function geocode(label){const q=qFor(label);if(geoCache[q])return geoCache[q];try{const u='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=it&q='+encodeURIComponent(q);const a=await fetch(u,{headers:{'Accept-Language':'it'}}).then(x=>x.json());if(a[0])return geoCache[q]=[+a[0].lat,+a[0].lon]}catch(e){}return null}
