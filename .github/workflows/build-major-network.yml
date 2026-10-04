@@ -37,7 +37,7 @@ jobs:
       - name: Download Nord-Est and extract Castel Maggiore roads
         run: |
           curl -L --retry 4 --retry-delay 3 --fail             -o /tmp/nord-est.osm.pbf             https://download.geofabrik.de/europe/italy/nord-est-latest.osm.pbf
-          osmium extract -b 11.28,44.52,11.44,44.62 /tmp/nord-est.osm.pbf -o /tmp/castel.osm.pbf
+          osmium extract -b 11.24,44.48,11.46,44.64 /tmp/nord-est.osm.pbf -o /tmp/castel.osm.pbf
           osmium tags-filter /tmp/castel.osm.pbf w/highway -o /tmp/roads.osm.pbf
           osmium export /tmp/roads.osm.pbf -f geojsonseq -o /tmp/roads.geojsonseq
       - name: Generate static network
