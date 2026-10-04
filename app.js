@@ -88,7 +88,7 @@ function chooseMajorRoute(index){
 function initMajorRouteSelection(){document.querySelectorAll('[data-major-route]').forEach(b=>b.onclick=()=>chooseMajorRoute(b.dataset.majorRoute));$('majorChooserCancel').onclick=closeMajorChooser;$('majorChangeRoute').onclick=()=>{if(mapState.active&&!mapState.paused){alert('Metti in pausa o termina il lavoro prima di cambiare percorso.');return}openMajorChooser(true)};openMajorChooser(false)}
 
 function majorSearchName(name){return name.replace(/\s*\+.*$/,'').replace(/\s*\(.*$/,'').replace(/^PARCH\.\s*/i,'').replace(/^PARCHEGGIO\s+/i,'').replace(/^PARCHEGGI\s+/i,'').trim()}
-let majorRoadNetwork=null,majorRoadLoading=null,majorBoundary=null,majorBoundaryLoading=null,majorBoundaryLayer=null;
+const majorRoadNetworks={},majorRoadLoadings={};let majorBoundary=null,majorBoundaryLoading=null,majorBoundaryLayer=null;
 function normRoadName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\bf\.\s*lli\b/g,'fratelli').replace(/\bxxv\b/g,'25').replace(/\biv\b/g,'4').replace(/1\s*°?/g,'primo ').replace(/[^a-z0-9 ]+/g,' ').replace(/\b(via|viale|piazza|circonvallazione)\b/g,' ').replace(/\b[a-z]\b/g,' ').replace(/\s+/g,' ').trim()}
 function roadNameScore(a,b){const A=new Set(normRoadName(a).split(' ').filter(Boolean)),B=new Set(normRoadName(b).split(' ').filter(Boolean));if(!A.size||!B.size)return 0;let hit=0;A.forEach(x=>{if(B.has(x))hit++});return hit/Math.max(A.size,B.size)}
 async function loadMajorBoundary(){
@@ -107,19 +107,23 @@ function clipMajorCoords(coords){
   for(let k=1;k<ts.length;k++){const t0=ts[k-1],t1=ts[k],m=interp(a,b,(t0+t1)/2);if(pointInBoundary(m)){const p0=interp(a,b,t0),p1=interp(a,b,t1);if(!current.length)current.push(p0);else{const last=current[current.length-1];if(Math.abs(last[0]-p0[0])>1e-8||Math.abs(last[1]-p0[1])>1e-8){pushPart(current);current=[p0]}}current.push(p1)}else if(current.length){pushPart(current);current=[]}}
  }if(current.length)pushPart(current);return parts
 }
-async function loadMajorRoadNetwork(){
- if(majorRoadNetwork)return majorRoadNetwork;if(majorRoadLoading)return majorRoadLoading;
- majorRoadLoading=(async()=>{await loadMajorBoundary();const q='[out:json][timeout:35];relation(43303);map_to_area->.a;way(area.a)["highway"]["name"];out tags geom;';const urls=['https://overpass-api.de/api/interpreter?data=','https://overpass.kumi.systems/api/interpreter?data='];let data=null,lastError='';
- for(const base of urls){try{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000),res=await fetch(base+encodeURIComponent(q),{signal:controller.signal});clearTimeout(timer);if(res.ok){data=await res.json();break}else lastError='HTTP '+res.status}catch(e){lastError=e?.name==='AbortError'?'timeout':String(e)}}
- if(!data)throw new Error('Reticolo stradale OSM non disponibile: '+lastError);
- majorRoadNetwork=(data.elements||[]).filter(x=>x.type==='way'&&x.tags?.name&&x.geometry?.length>1).flatMap(x=>clipMajorCoords(x.geometry.map(p=>[p.lat,p.lon])).map((coords,n)=>({id:x.id+'-'+n,name:x.tags.name,coords}))).filter(x=>x.coords.length>1);
- return majorRoadNetwork})().finally(()=>{majorRoadLoading=null});return majorRoadLoading
+function routeSearchPattern(route){
+ const terms=[...new Set((route?.streets||[]).map(s=>{const n=normRoadName(majorSearchName(s.searchName||s.name)),p=n.split(' ').filter(Boolean);return p.at(-1)||''}).filter(x=>x.length>=3))];
+ return terms.join('|')
+}
+async function loadMajorRoadNetwork(routeIndex=majorRi){
+ if(majorRoadNetworks[routeIndex])return majorRoadNetworks[routeIndex];if(majorRoadLoadings[routeIndex])return majorRoadLoadings[routeIndex];
+ majorRoadLoadings[routeIndex]=(async()=>{await loadMajorBoundary();const route=majorRoutes[routeIndex],pattern=routeSearchPattern(route);if(!pattern)throw new Error('Nessuna strada nel percorso');const q='[out:json][timeout:28];relation(43303);map_to_area->.a;way(area.a)["highway"]["name"~"'+pattern+'",i];out tags geom;';const urls=['https://overpass.kumi.systems/api/interpreter?data=','https://overpass-api.de/api/interpreter?data='];let data=null,lastError='';
+ for(const base of urls){try{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),14000),res=await fetch(base+encodeURIComponent(q),{signal:controller.signal});clearTimeout(timer);if(res.ok){data=await res.json();break}else lastError='HTTP '+res.status}catch(e){lastError=e?.name==='AbortError'?'timeout':String(e)}}
+ if(!data)throw new Error('Reticolo del percorso non disponibile: '+lastError);
+ const network=(data.elements||[]).filter(x=>x.type==='way'&&x.tags?.name&&x.geometry?.length>1).flatMap(x=>clipMajorCoords(x.geometry.map(p=>[p.lat,p.lon])).map((coords,n)=>({id:x.id+'-'+n,name:x.tags.name,coords}))).filter(x=>x.coords.length>1);
+ majorRoadNetworks[routeIndex]=network;return network})().finally(()=>{delete majorRoadLoadings[routeIndex]});return majorRoadLoadings[routeIndex]
 }
 function findMajorWays(street){
- const target=majorSearchName(street.searchName||street.name),n=normRoadName(target);if(!majorRoadNetwork)return[];
- let exact=majorRoadNetwork.filter(w=>normRoadName(w.name)===n);if(exact.length)return exact;
- const scored=majorRoadNetwork.map(w=>({w,score:roadNameScore(target,w.name)})).sort((a,b)=>b.score-a.score),best=scored[0]?.score||0;if(best<.5)return[];
- const winner=normRoadName(scored[0].w.name);return majorRoadNetwork.filter(w=>normRoadName(w.name)===winner)
+ const network=majorRoadNetworks[majorRi]||[],target=majorSearchName(street.searchName||street.name),n=normRoadName(target);if(!network.length)return[];
+ let exact=network.filter(w=>normRoadName(w.name)===n);if(exact.length)return exact;
+ const scored=network.map(w=>({w,score:roadNameScore(target,w.name)})).sort((a,b)=>b.score-a.score),best=scored[0]?.score||0;if(best<.5)return[];
+ const winner=normRoadName(scored[0].w.name);return network.filter(w=>normRoadName(w.name)===winner)
 }
 function offsetRoad(coords,meters){
  return coords.map((p,i)=>{const a=coords[Math.max(0,i-1)],b=coords[Math.min(coords.length-1,i+1)],lat=p[0]*Math.PI/180,dx=(b[1]-a[1])*111320*Math.cos(lat),dy=(b[0]-a[0])*110540,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;return[p[0]+ny*meters/110540,p[1]+nx*meters/(111320*Math.cos(lat))]})
