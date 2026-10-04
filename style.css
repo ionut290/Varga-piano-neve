@@ -5,3 +5,25 @@
 .workInstruction{margin:12px 0;line-height:1.45}.workInstruction b{color:#eef6fb}.workInstruction p{margin:5px 0}#routeChecksDetails{margin:12px 0;line-height:1.45}#routeChecksDetails summary{cursor:pointer;font-weight:600}#routeChecks{padding-left:22px}#routeChecks li{margin:8px 0}
 
 .streetViewBtn{width:100%;padding:9px;margin:4px 0;font-size:12px;background:#243c4d;color:#eef6fb}
+
+/* Mobile: privilegia la mappa durante la viabilità minore */
+@media(max-width:799px){
+  #panel{max-height:42vh;padding:9px 10px;border-radius:18px;overflow:auto}
+  .tabs{margin-bottom:6px}
+  .tab{padding:8px 4px}
+  #minor .progress{margin-bottom:6px}
+  #minor .workInstruction,
+  #minor #routeChecksDetails,
+  #minor #routeInfo,
+  #minor #officialInfo,
+  #minor .surfaceLegend,
+  #minor #streetView{display:none}
+  #minor #stops{max-height:72px;margin:6px 0}
+  #minor .stopItem{padding:6px}
+  #minor .primaryActions button{min-height:44px;padding:9px 6px}
+  #minor .secondaryActions{margin-top:5px}
+  #minor .secondaryActions button{padding:7px 3px}
+  #minor #navBanner{margin:5px 0;padding:5px 8px}
+  #minor .actions.compact{display:none}
+  #minor .status{margin-bottom:2px}
+}
