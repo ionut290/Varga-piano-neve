@@ -40,8 +40,7 @@ const stopEntrances={
  "2-1":[44.5526334,11.3249917],
  "2-2":[44.5565516,11.3185115],
  "2-4":[44.5545065,11.3179643],
- "2-9":[44.5543218,11.3526711], // materna Villa Salina / area via I Maggio 8
- "2-12":[44.5551671,11.353223]
+ "2-9":[44.5543218,11.3526711] // tappa materna: ingresso non certificato dal DBTR, marker storico mantenuto finché verificato
 };
 function stopMarkerPoint(rix,i){return stopEntrances[rix+'-'+i]||surfaceStart(rix,i)}
 function drawSegment(layer,rix,i,options){
