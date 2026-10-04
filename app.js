@@ -11,7 +11,7 @@ let officialErrorShown=false;
 [officialFootways,officialCycleways].forEach(layer=>layer.on('tileerror',()=>{if(!officialErrorShown&&currentMode==='minor'){officialErrorShown=true;$('officialInfo').textContent='Cartografia regionale non disponibile: restano visibili il percorso e la mappa di base.'}}));
 
 L.control.zoom({position:'topright'}).addTo(map);
-const routes=(window.KML_ROUTES||[]).map(r=>({name:r.name,segments:r.segments,points:r.segments.map(s=>s.name)}));let ri=0,pi=0,currentMode="major",minorMapOpened=false;const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null;
+const rebuiltNames=window.ROUTE_INSTRUCTIONS?.names||[];const rebuiltNotes=window.ROUTE_INSTRUCTIONS?.notes||[];const routes=rebuiltNotes.map((notes,rix)=>({name:rebuiltNames[rix]||('Percorso '+(rix+1)),segments:notes.map((name,i)=>({name,coords:window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.coords||[]})),points:notes}));let ri=0,pi=0,currentMode="major",minorMapOpened=false;const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null;
 async function roadRoute(a,b){try{const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson&steps=true';const j=await fetch(u).then(r=>r.json());if(j.routes&&j.routes[0])return j.routes[0]}catch(e){}return null}
 function fmtDist(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(1)+' km'}
 function navUpdate(ll){if(!navTarget)return;const meters=d(ll,navTarget);if($('routeInfo'))$('routeInfo').textContent='🧭 NAVIGAZIONE • '+fmtDist(meters)+' alla tappa '+(pi+1);if(meters<25){$('routeInfo').textContent='📍 ARRIVATO ALLA TAPPA '+(pi+1);navTarget=null}}
@@ -21,8 +21,8 @@ function stopInstruction(rix,i){return window.ROUTE_INSTRUCTIONS?.notes?.[rix]?.
 function escapeText(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function instructionPopup(rix,i){const note=stopInstruction(rix,i);return note?'<br><br><b>Da pulire · elenco operativo</b><br>'+escapeText(note):''}
 function renderInstructions(){ $('workInstruction').textContent=stopInstruction(ri,pi);const box=$('routeChecks');box.replaceChildren();const issues=window.ROUTE_INSTRUCTIONS?.issues?.[ri]||[];$('routeChecksDetails').hidden=!issues.length;issues.forEach(note=>{const item=document.createElement('li');item.textContent=note;box.appendChild(item)})}
-function surfaceParts(rix,i){return window.SURFACE_ROUTES?.[rix]?.[i]?.parts||[{coords:routes[rix].segments[i].coords,matched:false}]}
-function surfaceStart(rix,i){const parts=surfaceParts(rix,i);const p=parts.find(x=>!x.excluded&&x.coords?.length)||parts.find(x=>x.coords?.length);return p?.coords[0]||routes[rix].segments[i].coords[0]}
+function surfaceParts(rix,i){const rebuilt=window.REBUILT_MINOR_ROUTES?.[rix]?.[i];if(rebuilt?.parts?.length)return rebuilt.parts;return routes[rix].segments[i].coords?.length?[{coords:routes[rix].segments[i].coords,matched:false,source:'rebuild-pending'}]:[]}
+function surfaceStart(rix,i){const parts=surfaceParts(rix,i);const p=parts.find(x=>!x.excluded&&x.coords?.length)||parts.find(x=>x.coords?.length);return p?.coords?.[0]||routes[rix].segments[i].coords?.[0]||null}
 const stopEntrances={
  "0-2":[44.5772966,11.3582505],
  "0-3":[44.5777438,11.3580944],
@@ -42,7 +42,7 @@ const stopEntrances={
  "2-4":[44.5545065,11.3179643],
  "2-9":[44.5543218,11.3526711] // tappa materna: ingresso non certificato dal DBTR, marker storico mantenuto finché verificato
 };
-function stopMarkerPoint(rix,i){return stopEntrances[rix+'-'+i]||surfaceStart(rix,i)}
+function stopMarkerPoint(rix,i){return window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.marker||surfaceStart(rix,i)}
 function drawSegment(layer,rix,i,options){
  const s=routes[rix].segments[i],minor=currentMode==='minor';
  const parts=minor?surfaceParts(rix,i):[{coords:s.coords,matched:true}];
