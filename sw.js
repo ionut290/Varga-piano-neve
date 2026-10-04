@@ -1,4 +1,4 @@
-const C='varga-piano-neve-v30-offline-fast',A=['./','./index.html','./style.css?v=16','./major-network.js?v=3','./major-offline-nav.js?v=3','./major-routes.js?v=4','./routes-rebuilt.js?v=4','./routes-instructions.js?v=1','./app.js?v=34','./manifest.webmanifest'];
+const C='varga-piano-neve-v31-compact-controls',A=['./','./index.html','./style.css?v=17','./major-network.js?v=3','./major-offline-nav.js?v=3','./major-routes.js?v=4','./routes-rebuilt.js?v=4','./routes-instructions.js?v=1','./app.js?v=35','./manifest.webmanifest'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(A)))});
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([self.clients.claim(),caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x))))])));
 self.addEventListener('fetch',e=>{
