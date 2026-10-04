@@ -44,3 +44,5 @@
 .majorTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start}.majorTop .progress{margin:2px 0 6px}.routeChangeBtn{padding:7px 9px;border-radius:10px;font-size:10px;background:#213743;color:#d9e7ee;white-space:nowrap}
 #major .status{margin:2px 0}.majorService{font-size:11px}#major #hint{margin:5px 0;font-size:10px}
 @media(max-width:799px){header{height:56px;padding:7px 10px}main{height:calc(100% - 56px)}header b{font-size:14px}.headerMetrics{gap:4px}.headerMetrics>span{min-width:52px;padding:4px 5px}.headerMetrics>span b{font-size:10px}.headerMetrics>span small{font-size:7px}header button{font-size:18px;padding:6px 10px}#panel{max-height:38vh}.routeChooserCard{padding:16px;border-radius:18px}.routePick{min-height:50px}.majorLaneLegend{font-size:9px}.majorTop .progress>b{font-size:11px}.routeChangeBtn{font-size:9px;padding:6px 8px}#majorStreets{max-height:76px}.primaryActions button{min-height:44px}#major .actions button{padding:10px 7px}}
+
+.majorOnlyDone{grid-template-columns:1fr}.majorOnlyDone .doneBtn{grid-column:1;min-height:44px}
