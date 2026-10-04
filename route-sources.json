@@ -1,14 +1,14 @@
 {
   "snapshot": "2026-10-04",
   "osm": "OpenStreetMap footway/cycleway/path/pedestrian ways, ODbL",
-  "regional": "DBTR ACP/ACI WMS areas, CC BY 4.0, lines estimated from raster areas",
+  "regional": "DBTR ACP/ACI vettoriale dal pacchetto downloadDBTR_349950.zip fornito dall'utente + WMS DBTR per controllo visivo, CC BY 4.0",
   "regionalWms": "https://servizigis.regione.emilia-romagna.it/wms/dbtr",
   "sourceList": "Elenco operativo viabilità minore fornito dall’utente; documento salvato nel novembre 2023",
   "streetViewChecks": [
     "Via Bondanello: incrocio Repubblica e accesso camminamento distretto; immagini luglio 2026",
     "Scuola via Emanuela Loi: ingresso individuato; percorso da completare separatamente"
   ],
-  "remaining": "Original KML parts do not certify sidewalks. Via Loi, Gramsci Galliera–Matteotti and former elementary school require coverage verification.",
+  "remaining": "Revisione strada-per-strada in corso sui layer vettoriali DBTR. Le parti KML residue non sono considerate perfette finché lato, accesso/corsello e continuità non sono verificati.",
   "manualTraces": [
     {
       "route": 1,
@@ -101,5 +101,32 @@
       "Centro Diurno Casa del Ciliegio": "via Ungaretti 1"
     },
     "note": "I marker istituzionali vengono separati dall'inizio geometrico della tappa. Gli accessi non verificati non vengono inventati: richiedono geometria pedonale/ortofoto attendibile."
+  },
+  "dbtrVectorReview": {
+    "date": "2026-10-04",
+    "package": "downloadDBTR_349950.zip",
+    "layers": {
+      "ACP": 398,
+      "ACI": 16
+    },
+    "rule": "ACP/ACI sono superfici ufficiali: usate per verificare il lato e la presenza di aree pedonali/ciclabili, senza inventare automaticamente una linea centrale o un ingresso.",
+    "accessChecks": [
+      {
+        "site": "Filippo Bassi",
+        "status": "marker su superficie ACP/ACI; ingresso puntuale da verificare"
+      },
+      {
+        "site": "Donini-Pelagalli",
+        "status": "marker vicino a superficie ACP/ACI; verificare ingresso principale e corsello Bondanello-La Malfa"
+      },
+      {
+        "site": "Carlo Levi",
+        "status": "vecchio candidato non certificato dal DBTR come ingresso; da non considerare definitivo"
+      },
+      {
+        "site": "Villa Salina",
+        "status": "vecchio candidato non certificato dal DBTR come ingresso; da non considerare definitivo"
+      }
+    ]
   }
 }
