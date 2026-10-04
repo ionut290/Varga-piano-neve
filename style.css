@@ -37,4 +37,4 @@
 
 .majorArrow{background:transparent!important;border:0!important}.majorArrow span{display:block;font-size:24px;line-height:24px;text-shadow:0 1px 3px #fff,0 0 4px #fff;font-weight:900}.streetMeters{font-size:10px}
 
-.majorLaneLegend{display:flex;justify-content:space-between;gap:8px;margin:6px 0;font-size:10px;font-weight:800;color:#b8c9d3}.majorLaneLegend span:last-child{opacity:.82}
+.majorLaneLegend{display:flex;justify-content:space-between;gap:8px;margin:6px 0;font-size:10px;font-weight:800;color:#b8c9d3;flex-wrap:wrap}.majorLaneLegend span:last-child{opacity:.82}
