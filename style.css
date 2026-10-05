@@ -153,3 +153,11 @@ body.auth-locked #loginScreen,body.auth-loading #loginScreen{display:grid}
 
 /* Build 59 startup buttons: force readable dark controls */
 #startupModeStep .routePick{background:#17394d!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border:2px solid #4e7185!important;opacity:1!important;font-weight:900!important}
+
+/* Keep route colours distinct and choices above operator controls. */
+#startupChooser{z-index:10000}
+.startupCard .redPick{background:#9f2f35!important}
+.startupCard .bluePick{background:#1765a3!important}
+.startupCard .yellowPick{background:#765c00!important}
+#startupMajorRoutes,#startupMinorRoutes{display:grid;gap:10px}
+#startupMajorRoutes[hidden],#startupMinorRoutes[hidden]{display:none!important}
