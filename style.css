@@ -150,3 +150,6 @@ body.auth-locked #loginScreen,body.auth-loading #loginScreen{display:grid}
 .startupCard .routePick{background:#173348!important;color:#fff!important;border:2px solid #3d6076!important;font-weight:850!important;text-shadow:none!important;opacity:1!important;-webkit-text-fill-color:#fff!important;touch-action:manipulation}
 .startupCard .routePick:active{transform:scale(.985);background:#24506c!important}
 .startupCard>b{color:#fff!important}.startupCard>small,#startupModeStep>small{color:#a9bfcc!important}
+
+/* Build 59 startup buttons: force readable dark controls */
+#startupModeStep .routePick{background:#17394d!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border:2px solid #4e7185!important;opacity:1!important;font-weight:900!important}
