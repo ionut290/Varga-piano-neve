@@ -261,17 +261,17 @@ function saveMajorWorkSession(force=false){
  const now=Date.now();lastMajorSessionSave=now;
  const pts=mapState.pts.map(p=>[+p[0].toFixed(6),+p[1].toFixed(6)]);
  const payload={v:1,mode:'major',routeIndex:majorRi,pointIndex:majorPi,active:true,paused:!!mapState.paused,meters:+mapState.meters.toFixed(1),pts,coverage:majorCoverageSegments,pausePoint:majorNav.pausePoint,navMode:majorNav.mode,resumeMode:majorNav.resumeMode,resumeTarget:majorNav.resumeTarget,current:mapState.current,updatedAt:now};
- try{localStorage.setItem(MAJOR_SESSION_KEY,JSON.stringify(payload))}catch(e){lastMajorSessionSave=0;$('gps').textContent='⚠ Salvataggio non riuscito: non chiudere l’app';console.warn('Session save failed',e);return false}return true
+ try{localStorage.setItem(MAJOR_SESSION_KEY,JSON.stringify(payload));window.VargaSnowCloud?.saveSession(payload).catch(e=>console.warn('Cloud session save failed',e))}catch(e){lastMajorSessionSave=0;$('gps').textContent='⚠ Salvataggio non riuscito: non chiudere l’app';console.warn('Session save failed',e);return false}return true
 }
 function clearMajorWorkSession(){
- localStorage.removeItem(MAJOR_SESSION_KEY);majorCoverageSegments=[];majorCoverageLayer.clearLayers();majorTracking.coveredMeters=0;mapState.meters=0;mapState.pts=[];mapState.last=null;line.setLatLngs([])
+ localStorage.removeItem(MAJOR_SESSION_KEY);window.VargaSnowCloud?.clearSession().catch(e=>console.warn('Cloud session clear failed',e));majorCoverageSegments=[];majorCoverageLayer.clearLayers();majorTracking.coveredMeters=0;mapState.meters=0;mapState.pts=[];mapState.last=null;line.setLatLngs([])
 }
 function drawSavedMajorCoverage(){
  majorCoverageLayer.clearLayers();
  for(const s of majorCoverageSegments){if(!Array.isArray(s)||s.length<5||s[0]!==majorRi)continue;L.polyline([[s[1],s[2]],[s[3],s[4]]],{color:'#20bd62',weight:11,opacity:.95,lineCap:'round',interactive:false}).addTo(majorCoverageLayer)}
 }
 async function restoreMajorWorkSession(){
- const s=readMajorWorkSession();if(!s?.active||s.mode!=='major'||s.routeIndex!==majorRi)return false;
+ let s=readMajorWorkSession();try{const cloud=await window.VargaSnowCloud?.loadSession?.();if(cloud?.active&&cloud.mode==='major'&&(!s||Number(cloud.updatedAt?.toMillis?.()||cloud.updatedAt||0)>Number(s.updatedAt||0))){s=cloud;try{localStorage.setItem(MAJOR_SESSION_KEY,JSON.stringify(Object.assign({},cloud,{updatedAt:Date.now()})))}catch(_){}}}catch(e){console.warn('Cloud session restore failed',e)}if(!s?.active||s.mode!=='major'||s.routeIndex!==majorRi)return false;
  mapState.active=true;mapState.paused=!!s.paused;mapState.meters=Number(s.meters)||0;mapState.pts=Array.isArray(s.pts)?s.pts:[];mapState.last=null;mapState.current=Array.isArray(s.current)?s.current:null;line.setLatLngs(mapState.pts);
  majorPi=Number.isInteger(s.pointIndex)&&s.pointIndex>=0&&s.pointIndex<(majorRoutes[majorRi]?.streets?.length||0)?s.pointIndex:0;
  majorCoverageSegments=Array.isArray(s.coverage)?s.coverage:[];drawSavedMajorCoverage();
