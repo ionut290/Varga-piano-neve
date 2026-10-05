@@ -59,8 +59,10 @@ function updateMajorInsideGuide(ll,accuracy=15){
  $('majorRouteInfo').textContent='🧭 SUL PERCORSO • continua su '+streetName
 }
 async function beginMajorNavigation(ll,accuracy=15){
- const best=nearestMajorLanePoint(ll,null),allowed=majorAllowedDistance(accuracy);if(best&&best.dist<=allowed){startMajorInsideNavigation(ll,accuracy);return}
- const start=majorRouteStartPoint();if(start)await navigateMajorTo(ll,start,'to-start','Verso inizio percorso')
+ const best=nearestMajorLanePoint(ll,null),allowed=majorAllowedDistance(accuracy);
+ if(best&&best.dist<=allowed){startMajorInsideNavigation(ll,accuracy);return}
+ if(best?.point){await navigateMajorTo(ll,best.point,'to-start','Verso il punto più vicino del percorso');return}
+ const start=majorRouteStartPoint();if(start)await navigateMajorTo(ll,start,'to-start','Verso il percorso')
 }
 async function updateMajorNavigation(ll,accuracy=15,speed=0){
  if(currentMode!=='major'||!mapState.active)return;
