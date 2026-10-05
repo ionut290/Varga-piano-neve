@@ -16,7 +16,7 @@ window.addEventListener('resize',repairMapSize);window.addEventListener('orienta
 if(window.ResizeObserver)new ResizeObserver(repairMapSize).observe(document.getElementById('map'));
 const rebuiltNames=window.ROUTE_INSTRUCTIONS?.names||[];const rebuiltNotes=window.ROUTE_INSTRUCTIONS?.notes||[];const routes=rebuiltNotes.map((notes,rix)=>({name:rebuiltNames[rix]||('Percorso '+(rix+1)),segments:notes.map((name,i)=>({name,coords:window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.coords||[]})),points:notes}));
 const majorRoutes=window.MAJOR_ROUTES||[];
-const APP_BUILD='49';const SW_BUILD='49';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
+const APP_BUILD='53';const SW_BUILD='53';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
 let ri=0,pi=0,majorRi=savedMajorRoute!==null&&Number.isInteger(+savedMajorRoute)&&+savedMajorRoute>=0&&+savedMajorRoute<majorRoutes.length?+savedMajorRoute:0,majorPi=0,currentMode="major",minorMapOpened=false;
 const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),majorDone=new Set(JSON.parse(localStorage.getItem('majorDone')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null,majorGuideLine=null,majorPauseMarker=null,majorVehicleMarker=null;const majorNav={mode:'idle',target:null,pausePoint:null,resumeMode:null,resumeTarget:null,path:[],maneuvers:[],pathIndex:0,lastVoiceKey:'',lastInsideStreet:null,lastRerouteAt:0,rerouting:false};
 async function roadRoute(a,b){try{const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson&steps=true';const j=await fetch(u).then(r=>r.json());if(j.routes&&j.routes[0])return j.routes[0]}catch(e){}return null}
@@ -321,4 +321,17 @@ async function bootWorkSession(){
  renderMajor();drawAllRoutes();ui();gps();registerAppWorker();
 }
 
-window.addEventListener('varga-auth-ready',e=>{const admin=e.detail?.role==='admin';const b=$('adminArchiveTour');if(b)b.hidden=!admin;repairMapSize();setTimeout(repairMapSize,500)});
+
+/* Admin route manager */
+let routeEditMode=false,routeEditPoints=[],routeEditLine=null;
+function openRouteManager(){if(window.VargaSnowCloud?.role!=='admin')return;routeEditMode=false;routeEditPoints=[];$('routeEditor').hidden=false;setMajorMore(false)}
+function closeRouteManager(){routeEditMode=false;routeEditPoints=[];if(routeEditLine){map.removeLayer(routeEditLine);routeEditLine=null}$('routeEditor').hidden=true}
+$('adminManageRoutes').onclick=openRouteManager;
+$('routeEditorClose').onclick=closeRouteManager;
+$('routeAddStreet').onclick=()=>{routeEditMode=true;routeEditPoints=[];if(routeEditLine){map.removeLayer(routeEditLine);routeEditLine=null}$('routeEditor').hidden=true;alert('Tocca sulla mappa il punto iniziale e poi il punto finale della strada.')};
+map.on('click',e=>{if(!routeEditMode||window.VargaSnowCloud?.role!=='admin')return;routeEditPoints.push([e.latlng.lat,e.latlng.lng]);L.circleMarker(e.latlng,{radius:7,weight:3}).addTo(map);if(routeEditPoints.length===2){routeEditLine=L.polyline(routeEditPoints,{weight:9}).addTo(map);routeEditMode=false;$('routeEditor').hidden=false;$('routeEditorStatus').textContent='Nuovo tratto selezionato. Premi Salva modifica.';$('routeEditorSave').disabled=false}});
+$('routeEditorSave').onclick=async()=>{if(routeEditPoints.length<2)return;const name=prompt('Nome della strada (facoltativo):','')||'Nuova strada';const municipality=prompt('Comune (facoltativo):','Castel Maggiore')||'';try{await window.VargaSnowCloud.saveRouteEdit({action:'add',mode:currentMode,routeIndex:currentMode==='major'?majorRi:ri,name,municipality,coords:routeEditPoints,createdAtClient:new Date().toISOString()});alert('Strada salvata.');closeRouteManager()}catch(e){console.error(e);alert('Salvataggio non riuscito.')}};
+$('routeEditSelected').onclick=()=>alert('Ora tocca il tratto del percorso che vuoi modificare.');
+$('routeDeleteSelected').onclick=()=>alert('Ora tocca il tratto del percorso che vuoi eliminare.');
+
+window.addEventListener('varga-auth-ready',e=>{const admin=e.detail?.role==='admin';const b=$('adminArchiveTour');if(b)b.hidden=!admin;const rm=$('adminManageRoutes');if(rm)rm.hidden=!admin;repairMapSize();setTimeout(repairMapSize,500)});
