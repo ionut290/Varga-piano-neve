@@ -96,3 +96,17 @@
   .majorMenuHeader{top:-11px;margin:-11px -11px 9px;padding:10px 11px}
   #major>.majorStateAction button{min-height:54px!important;font-size:16px!important}
 }
+
+
+/* Build 43: auth wrapper must preserve the full-screen map layout on iOS/PWA */
+#snowApp{height:100%;min-height:100%;width:100%;position:relative;overflow:hidden}
+#snowApp[hidden]{display:none!important}
+body.auth-loading #snowApp{display:none!important}
+@supports (height:100dvh){
+  html,body,#snowApp{height:100dvh}
+}
+@media(max-width:799px){
+  #snowApp>header{padding-top:max(7px,env(safe-area-inset-top));height:calc(56px + env(safe-area-inset-top))}
+  #snowApp>main{height:calc(100% - 56px - env(safe-area-inset-top))}
+  #map{min-height:100%}
+}
