@@ -170,3 +170,10 @@ body.auth-locked #loginScreen,body.auth-loading #loginScreen{display:grid}
 .saltEstimate{margin:0 0 8px;padding:8px 11px;border:1px solid #3b5a4b;border-radius:12px;background:#133126;color:#65e697;text-align:center;font-size:13px;font-weight:950;letter-spacing:.2px}
 .saltEstimate[hidden]{display:none!important}
 .saltEstimate.lowSalt{border-color:#ff5555;background:#5b1c21;color:#fff}
+
+/* Build 64: tap the salt estimate to record a refill */
+.saltEstimate{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.saltEstimate:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.saltEstimate:active{filter:brightness(1.2)}
+.saltAddDialog{z-index:11000}
+.saltAddDialog[hidden]{display:none!important}
