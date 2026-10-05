@@ -122,3 +122,8 @@ body.auth-loading #snowApp{display:none!important}
 #loginMessage{min-height:18px;color:#ffca72;font-size:12px;font-weight:700}
 body.auth-ready #loginScreen{display:none!important}
 body.auth-locked #loginScreen,body.auth-loading #loginScreen{display:grid}
+
+/* Build 49: admin archive action + stable Leaflet sizing on iOS */
+.adminArchiveBtn{background:#7b4cc9!important;color:#fff!important}
+#map,.leaflet-container{position:relative;overflow:hidden}
+.leaflet-map-pane,.leaflet-tile-pane{will-change:transform}
