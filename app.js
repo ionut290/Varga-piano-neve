@@ -113,7 +113,7 @@ function drawSegment(layer,rix,i,options){
  const parts=minor?surfaceParts(rix,i):[{coords:s.coords,matched:true}];
  const excluded=window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.excluded;
  if(minor&&excluded)return;
- parts.forEach(part=>{const src=part.source||'geometria-verificata';const srcLabel=src==='dbtr-acp'?'DBTR • area pedonale':src==='dbtr-aci'?'DBTR • area ciclabile':src==='manual-ortho'?'Ortofoto Regione 2023–24':src==='regional-estimate'?'Regione • stima da area ufficiale':src==='osm'?'OSM • percorso pedonale/ciclabile':src==='civic-road-axis-estimate'?'Asse stradale ricostruito per intervento su carreggiata':src;L.polyline(part.coords,{...options,color:minor&&!part.matched?'#e53935':options.color,weight:minor?Math.min(options.weight,part.matched?3:5):options.weight,dashArray:minor?(part.source==='regional-estimate'?'2 3':!part.matched?'8 7':null):null}).addTo(layer).bindPopup('<b>'+s.name+'</b><br>'+routes[rix].name+'<br>'+(minor?srcLabel:'Percorso operativo')+(minor?instructionPopup(rix,i):''))});
+ parts.forEach(part=>{const src=part.source||'geometria-verificata';const srcLabel=src==='dbtr-acp'?'DBTR • area pedonale':src==='dbtr-aci'?'DBTR • area ciclabile':src==='manual-ortho'?'Ortofoto Regione 2023–24':src==='regional-estimate'?'Regione • stima da area ufficiale':src==='osm'?'OSM • percorso pedonale/ciclabile':src==='civic-road-axis-estimate'?'Asse stradale ricostruito per intervento su carreggiata':src;L.polyline(part.coords,{...options,color:minor&&!part.matched?'#e53935':options.color,weight:minor?Math.min(options.weight,part.matched?3:5):options.weight,dashArray:minor?(part.source==='regional-estimate'?'2 3':!part.matched?'8 7':null):null}).addTo(layer).on('click',e=>{if(routeEditMode==='select-edit'||routeEditMode==='select-delete'){L.DomEvent.stopPropagation(e);selectRouteForAdmin('minor',i,s.name,part.coords)}}).bindPopup('<b>'+s.name+'</b><br>'+routes[rix].name+'<br>'+(minor?srcLabel:'Percorso operativo')+(minor?instructionPopup(rix,i):''))});
 }
 function drawAllRoutes(){allRoutesLayer.clearLayers();if(currentMode!=='minor')return;routes.forEach((r,rix)=>r.segments.forEach((s,i)=>{const complete=done.has(rix+'-'+i);drawSegment(allRoutesLayer,rix,i,{color:complete?'#20bd62':'#1976d2',weight:7,opacity:.35})}))}
 function drawRoute(focus=true){
@@ -205,8 +205,8 @@ function majorColor(r){return r.code==='rosso'?'#d83f3f':r.code==='blu'?'#1976d2
 function drawMajorWayPair(coords,r,s,active=true){
  const color=majorColor(r),popup='<b>'+escapeText(s.name)+'</b><br>'+r.name+' • '+fmtDist(s.meters)+'<br><b>Doppio passaggio:</b> una corsia per senso di marcia<br><b>Limite:</b> solo Comune di Castel Maggiore',drawn=[];
  const centers=clipMajorCoords(coords);for(const center of centers){const aParts=clipMajorCoords(offsetRoad(center,2.4)),bParts=clipMajorCoords(offsetRoad(center,-2.4)).map(x=>x.slice().reverse());
-  for(const a of aParts){L.polyline(a,{color,weight:active?6:4,opacity:active?1:.7}).addTo(routeLayer).bindPopup(popup);drawn.push(a);if(active)addMajorArrow(a,color)}
-  for(const b of bParts){L.polyline(b,{color,weight:active?6:4,opacity:active?1:.7,dashArray:'10 7'}).addTo(routeLayer).bindPopup(popup);drawn.push(b);if(active)addMajorArrow(b,color)}
+  for(const a of aParts){L.polyline(a,{color,weight:active?6:4,opacity:active?1:.7}).addTo(routeLayer).on('click',e=>{if(routeEditMode==='select-edit'||routeEditMode==='select-delete'){L.DomEvent.stopPropagation(e);selectRouteForAdmin('major',majorRoutes[majorRi]?.streets?.indexOf(s)??-1,s.name,a)}}).bindPopup(popup);drawn.push(a);if(active)addMajorArrow(a,color)}
+  for(const b of bParts){L.polyline(b,{color,weight:active?6:4,opacity:active?1:.7,dashArray:'10 7'}).addTo(routeLayer).on('click',e=>{if(routeEditMode==='select-edit'||routeEditMode==='select-delete'){L.DomEvent.stopPropagation(e);selectRouteForAdmin('major',majorRoutes[majorRi]?.streets?.indexOf(s)??-1,s.name,b)}}).bindPopup(popup);drawn.push(b);if(active)addMajorArrow(b,color)}
  }return drawn
 }
 async function fallbackMajorPoint(r,s){await loadMajorRoadNetwork();const target=majorSearchName(s.searchName||s.name),scored=majorRoadNetwork.map(w=>({w,score:roadNameScore(target,w.name)})).sort((a,b)=>b.score-a.score),w=scored[0]?.score>=.35?scored[0].w:null;if(!w?.coords?.length)return null;const p=w.coords[Math.floor(w.coords.length/2)];L.circleMarker(p,{radius:11,color:'#fff',weight:4,fillColor:majorColor(r),fillOpacity:1}).addTo(routeLayer).bindPopup('<b>'+escapeText(s.name)+'</b><br>'+r.name+' • '+fmtDist(s.meters)+'<br>Posizione ricavata dal reticolo offline');return p}
@@ -325,7 +325,7 @@ async function bootWorkSession(){
 /* Admin route manager */
 let routeEditMode=false,routeEditPoints=[],routeEditLine=null,routeEditSelected=null;
 function openRouteManager(){if(window.VargaSnowCloud?.role!=='admin')return;routeEditMode=false;routeEditPoints=[];$('routeEditor').hidden=false;setMajorMore(false)}
-function closeRouteManager(){routeEditMode=false;routeEditPoints=[];if(routeEditLine){map.removeLayer(routeEditLine);routeEditLine=null}$('routeEditor').hidden=true}
+function closeRouteManager(){routeEditMode=false;routeEditPoints=[];routeEditSelected=null;if(routeEditLine){map.removeLayer(routeEditLine);routeEditLine=null}$('routeEditor').hidden=true}
 $('adminManageRoutes').onclick=openRouteManager;
 $('routeEditorClose').onclick=closeRouteManager;
 $('routeAddStreet').onclick=()=>{routeEditMode=true;routeEditPoints=[];if(routeEditLine){map.removeLayer(routeEditLine);routeEditLine=null}$('routeEditor').hidden=true;alert('Tocca sulla mappa il punto iniziale e poi il punto finale della strada.')};
