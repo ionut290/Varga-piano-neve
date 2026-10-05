@@ -137,3 +137,7 @@ body.auth-locked #loginScreen,body.auth-loading #loginScreen{display:grid}
 /* Build 51: place operator menu in the free header slot between title and metrics. */
 #major>.operatorMoreBtn{position:fixed!important;top:calc(env(safe-area-inset-top) + 15px)!important;right:calc(50% - 55px)!important;z-index:9999!important;width:42px!important;height:42px!important;display:block!important}
 @media(max-width:390px){#major>.operatorMoreBtn{right:calc(50% - 48px)!important;width:38px!important;height:38px!important}}
+
+/* Build 52: move operator menu left so it does not overlap header metrics. */
+#major>.operatorMoreBtn{left:calc(50% - 28px)!important;right:auto!important}
+@media(max-width:390px){#major>.operatorMoreBtn{left:calc(50% - 24px)!important;right:auto!important}}
