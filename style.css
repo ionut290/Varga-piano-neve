@@ -110,3 +110,15 @@ body.auth-loading #snowApp{display:none!important}
   #snowApp>main{height:calc(100% - 56px - env(safe-area-inset-top))}
   #map{min-height:100%}
 }
+
+
+/* Build 44: login/auth screen must always be visible while access is being resolved */
+.login-screen{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top)) 20px max(24px,env(safe-area-inset-bottom));background:#08131d;color:#eef6fb}
+.login-screen[hidden]{display:none!important}
+.login-card{width:min(420px,100%);display:grid;gap:12px;padding:22px;border:1px solid #294150;border-radius:22px;background:#0c1c27;box-shadow:0 18px 55px #0009}
+.login-card>b{font-size:18px}.login-card h2{margin:4px 0 0}.login-card p{margin:0;color:#9db0bc;font-size:13px}
+.login-card input{width:100%;min-height:50px;border:1px solid #385263;border-radius:13px;padding:12px 14px;background:#102532;color:#fff;font-size:16px;outline:none}
+.login-card button{width:100%;min-height:50px}.login-card #loginButton{background:#24b95d;color:#fff}
+#loginMessage{min-height:18px;color:#ffca72;font-size:12px;font-weight:700}
+body.auth-ready #loginScreen{display:none!important}
+body.auth-locked #loginScreen,body.auth-loading #loginScreen{display:grid}
