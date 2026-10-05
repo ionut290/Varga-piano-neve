@@ -67,6 +67,8 @@ async function beginMajorNavigation(ll,accuracy=15){
 async function updateMajorNavigation(ll,accuracy=15,speed=0){
  if(currentMode!=='major'||!mapState.active)return;
  if(majorNav.mode==='paused'){setMajorNavHud(true,'⏸','Pausa','',majorNav.pausePoint?'Punto di ripresa memorizzato':'');return}
+ if(majorNav.mode==='restore-pause'&&majorNav.pausePoint){await navigateMajorTo(ll,majorNav.pausePoint,'to-pause','Ritorno al punto di pausa');return}
+ if(majorNav.mode==='restore'){await beginMajorNavigation(ll,accuracy);return}
  if(majorNav.mode==='to-start'||majorNav.mode==='to-pause'){
   if(!majorNav.target)return;const meters=d(ll,majorNav.target),off=distanceToTransferPath(ll),now=Date.now();
   if(off>90&&!majorNav.rerouting&&now-majorNav.lastRerouteAt>12000){majorNav.rerouting=true;majorSpeak('Ricalcolo percorso','reroute-'+now,true);const mode=majorNav.mode,target=[...majorNav.target],label=mode==='to-pause'?'Ritorno al punto di pausa':'Verso inizio percorso';await navigateMajorTo(ll,target,mode,label);majorNav.rerouting=false;return}
@@ -258,7 +260,7 @@ function saveMajorWorkSession(force=false){
  if(!mapState.active)return;
  const now=Date.now();if(!force&&now-lastMajorSessionSave<1500)return;lastMajorSessionSave=now;
  const pts=mapState.pts.map(p=>[+p[0].toFixed(6),+p[1].toFixed(6)]);
- const payload={v:1,mode:'major',routeIndex:majorRi,pointIndex:majorPi,active:true,paused:!!mapState.paused,meters:+mapState.meters.toFixed(1),pts,coverage:majorCoverageSegments,pausePoint:majorNav.pausePoint,resumeMode:majorNav.resumeMode,resumeTarget:majorNav.resumeTarget,updatedAt:now};
+ const payload={v:1,mode:'major',routeIndex:majorRi,pointIndex:majorPi,active:true,paused:!!mapState.paused,meters:+mapState.meters.toFixed(1),pts,coverage:majorCoverageSegments,pausePoint:majorNav.pausePoint,navMode:majorNav.mode,resumeMode:majorNav.resumeMode,resumeTarget:majorNav.resumeTarget,updatedAt:now};
  try{localStorage.setItem(MAJOR_SESSION_KEY,JSON.stringify(payload))}catch(e){console.warn('Session save failed',e)}
 }
 function clearMajorWorkSession(){
@@ -273,7 +275,7 @@ async function restoreMajorWorkSession(){
  mapState.active=true;mapState.paused=!!s.paused;mapState.meters=Number(s.meters)||0;mapState.pts=Array.isArray(s.pts)?s.pts:[];mapState.last=null;line.setLatLngs(mapState.pts);
  majorPi=Number.isInteger(s.pointIndex)&&s.pointIndex>=0&&s.pointIndex<(majorRoutes[majorRi]?.streets?.length||0)?s.pointIndex:0;
  majorCoverageSegments=Array.isArray(s.coverage)?s.coverage:[];drawSavedMajorCoverage();
- majorNav.pausePoint=Array.isArray(s.pausePoint)?s.pausePoint:null;majorNav.resumeMode=s.resumeMode||null;majorNav.resumeTarget=Array.isArray(s.resumeTarget)?s.resumeTarget:null;majorNav.target=null;majorNav.mode=mapState.paused?'paused':'restore';
+ majorNav.pausePoint=Array.isArray(s.pausePoint)?s.pausePoint:null;majorNav.resumeMode=s.resumeMode||null;majorNav.resumeTarget=Array.isArray(s.resumeTarget)?s.resumeTarget:null;majorNav.target=null;majorNav.mode=mapState.paused?'paused':(s.navMode==='to-pause'&&majorNav.pausePoint?'restore-pause':'restore');
  await prepareMajorTrackingRoute();
  if(majorPauseMarker){routeLayer.removeLayer(majorPauseMarker);majorPauseMarker=null}
  if(mapState.paused&&majorNav.pausePoint)majorPauseMarker=L.circleMarker(majorNav.pausePoint,{radius:11,color:'#fff',weight:4,fillColor:'#ff9800',fillOpacity:1}).addTo(routeLayer).bindPopup('PUNTO DI PAUSA');
