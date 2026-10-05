@@ -130,3 +130,6 @@ body.auth-locked #loginScreen,body.auth-loading #loginScreen{display:grid}
 
 /* Mobile: keep the three-dot operator menu above the pause/status banner. */
 @media(max-width:799px){#major>.operatorMoreBtn{top:calc(64px + env(safe-area-inset-top))!important;right:10px!important;z-index:2500!important}.majorPauseBanner,.pauseBanner,#pauseBanner{z-index:1800!important}}
+
+/* Build 50: menu button lives in the header area, never under navigation/pause HUD. */
+#major>.operatorMoreBtn{position:fixed!important;top:calc(env(safe-area-inset-top) + 12px)!important;right:72px!important;z-index:9999!important;display:block!important;visibility:visible!important;opacity:1!important}
