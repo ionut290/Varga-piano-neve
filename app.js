@@ -218,6 +218,7 @@ async function showMajorRoute(){
 }
 
 const majorCoverageLayer=L.layerGroup().addTo(map);
+const MAJOR_SESSION_KEY='vargaMajorWorkSessionV1';let majorCoverageSegments=[],lastMajorSessionSave=0;
 const majorTracking={routeIndex:null,lanes:[],lastRaw:null,lastSnap:null,lastLane:null,coveredMeters:0};
 function headingDeg(a,b){const y=Math.sin((b[1]-a[1])*Math.PI/180)*Math.cos(b[0]*Math.PI/180),x=Math.cos(a[0]*Math.PI/180)*Math.sin(b[0]*Math.PI/180)-Math.sin(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.cos((b[1]-a[1])*Math.PI/180);return(Math.atan2(y,x)*180/Math.PI+360)%360}
 function angleDiff(a,b){const x=Math.abs(a-b)%360;return Math.min(x,360-x)}
@@ -242,7 +243,7 @@ function markMajorPassed(ll,accuracy){
  if(currentMode!=='major'||!mapState.active||mapState.paused||majorNav.mode==='to-start'||majorNav.mode==='to-pause'||!majorTracking.lanes.length||accuracy>35)return false;
  const moveHeading=majorTracking.lastRaw&&d(majorTracking.lastRaw,ll)>=3?headingDeg(majorTracking.lastRaw,ll):null,best=nearestMajorLanePoint(ll,moveHeading);majorTracking.lastRaw=ll;
  const allowed=Math.max(14,Math.min(28,accuracy+6));if(!best||best.dist>allowed){majorTracking.lastSnap=null;majorTracking.lastLane=null;$('majorRouteInfo').textContent='⚪ Fuori percorso • spostamento NON segnato come passato';return false}
- if(majorTracking.lastSnap&&majorTracking.lastLane===best.laneIndex){const jump=d(majorTracking.lastSnap,best.point);if(jump>=1&&jump<=80){L.polyline([majorTracking.lastSnap,best.point],{color:'#20bd62',weight:11,opacity:.95,lineCap:'round',interactive:false}).addTo(majorCoverageLayer);majorTracking.coveredMeters+=jump}}
+ if(majorTracking.lastSnap&&majorTracking.lastLane===best.laneIndex){const jump=d(majorTracking.lastSnap,best.point);if(jump>=1&&jump<=80){const a=majorTracking.lastSnap,b=best.point;L.polyline([a,b],{color:'#20bd62',weight:11,opacity:.95,lineCap:'round',interactive:false}).addTo(majorCoverageLayer);majorTracking.coveredMeters+=jump;majorCoverageSegments.push([majorRi,+a[0].toFixed(6),+a[1].toFixed(6),+b[0].toFixed(6),+b[1].toFixed(6)]);saveMajorWorkSession()}}
  majorTracking.lastSnap=best.point;majorTracking.lastLane=best.laneIndex;
  const street=majorRoutes[majorRi]?.streets?.[best.streetIndex];$('majorRouteInfo').textContent='🧭 SUL PERCORSO • '+(street?.name||'tratto')+' • passato evidenziato in verde';
  return true
