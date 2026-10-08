@@ -16,7 +16,7 @@ window.addEventListener('resize',repairMapSize);window.addEventListener('orienta
 if(window.ResizeObserver)new ResizeObserver(repairMapSize).observe(document.getElementById('map'));
 const rebuiltNames=window.ROUTE_INSTRUCTIONS?.names||[];const rebuiltNotes=window.ROUTE_INSTRUCTIONS?.notes||[];const routes=rebuiltNotes.map((notes,rix)=>({name:rebuiltNames[rix]||('Percorso '+(rix+1)),segments:notes.map((name,i)=>({name,coords:window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.coords||[]})),points:notes}));
 const majorRoutes=window.MAJOR_ROUTES||[];
-const APP_BUILD='65';const SW_BUILD='65';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
+const APP_BUILD='66';const SW_BUILD='66';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
 let ri=0,pi=0,majorRi=savedMajorRoute!==null&&Number.isInteger(+savedMajorRoute)&&+savedMajorRoute>=0&&+savedMajorRoute<majorRoutes.length?+savedMajorRoute:0,majorPi=0,currentMode="major",minorMapOpened=false;
 const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),majorDone=new Set(JSON.parse(localStorage.getItem('majorDone')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null,majorGuideLine=null,majorPauseMarker=null,majorVehicleMarker=null;const majorNav={mode:'idle',target:null,pausePoint:null,resumeMode:null,resumeTarget:null,path:[],maneuvers:[],pathIndex:0,lastVoiceKey:'',lastInsideStreet:null,lastRerouteAt:0,rerouting:false};
 async function roadRoute(a,b){try{const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson&steps=true';const j=await fetch(u).then(r=>r.json());if(j.routes&&j.routes[0])return j.routes[0]}catch(e){}return null}
@@ -297,7 +297,7 @@ function markMajorPassed(ll,accuracy){
  if(currentMode!=='major'||!mapState.active||mapState.paused||majorNav.mode!=='inside'||!majorTracking.lanes.length||accuracy>35)return false;
  const moveHeading=majorTracking.lastRaw&&d(majorTracking.lastRaw,ll)>=3?headingDeg(majorTracking.lastRaw,ll):null,best=trackedMajorLanePoint(ll,moveHeading,accuracy);majorTracking.lastRaw=ll;
  const allowed=Math.max(14,Math.min(28,accuracy+6));if(!best||best.stabilizing||best.dist>allowed){majorTracking.lastSnap=null;majorTracking.lastLane=null;$('majorRouteInfo').textContent=best?.stabilizing?'GPS in verifica • traccia verde momentaneamente sospesa':'⚪ Fuori percorso • spostamento NON segnato come passato';return false}
- if(majorTracking.lastSnap&&majorTracking.lastLane===best.laneIndex){const jump=d(majorTracking.lastSnap,best.point);if(jump>=1&&jump<=80){const a=majorTracking.lastSnap,b=best.point;L.polyline([a,b],{color:'#20bd62',weight:11,opacity:.95,lineCap:'round',interactive:false}).addTo(majorCoverageLayer);majorTracking.coveredMeters+=jump;majorCoverageSegments.push([majorRi,+a[0].toFixed(6),+a[1].toFixed(6),+b[0].toFixed(6),+b[1].toFixed(6)]);saveMajorWorkSession()}}
+ if(majorTracking.lastSnap&&majorTracking.lastLane===best.laneIndex){const jump=d(majorTracking.lastSnap,best.point);if(jump>=1&&jump<=80){const a=majorTracking.lastSnap,b=best.point;L.polyline([a,b],{color:'#20bd62',weight:6,opacity:1,lineCap:'round',interactive:false}).addTo(majorCoverageLayer);majorTracking.coveredMeters+=jump;majorCoverageSegments.push([majorRi,+a[0].toFixed(6),+a[1].toFixed(6),+b[0].toFixed(6),+b[1].toFixed(6)]);saveMajorWorkSession()}}
  majorTracking.lastSnap=best.point;majorTracking.lastLane=best.laneIndex;
  switchStreetWork(best.streetIndex);const street=majorRoutes[majorRi]?.streets?.[best.streetIndex];$('majorRouteInfo').textContent='🧭 SUL PERCORSO • '+(street?.name||'tratto')+' • passato evidenziato in verde';
  return true
@@ -321,7 +321,7 @@ function clearMajorWorkSession(){
 }
 function drawSavedMajorCoverage(){
  majorCoverageLayer.clearLayers();
- for(const s of majorCoverageSegments){if(!Array.isArray(s)||s.length<5||s[0]!==majorRi)continue;L.polyline([[s[1],s[2]],[s[3],s[4]]],{color:'#20bd62',weight:11,opacity:.95,lineCap:'round',interactive:false}).addTo(majorCoverageLayer)}
+ for(const s of majorCoverageSegments){if(!Array.isArray(s)||s.length<5||s[0]!==majorRi)continue;L.polyline([[s[1],s[2]],[s[3],s[4]]],{color:'#20bd62',weight:6,opacity:1,lineCap:'round',interactive:false}).addTo(majorCoverageLayer)}
 }
 async function restoreMajorWorkSession(){
  let s=readMajorWorkSession();try{const cloud=await window.VargaSnowCloud?.loadSession?.();if(cloud?.active&&cloud.mode==='major'&&(!s||Number(cloud.updatedAt?.toMillis?.()||cloud.updatedAt||0)>Number(s.updatedAt||0))){s=cloud;try{localStorage.setItem(MAJOR_SESSION_KEY,JSON.stringify(Object.assign({},cloud,{updatedAt:Date.now()})))}catch(_){}}}catch(e){console.warn('Cloud session restore failed',e)}if(!s?.active||s.mode!=='major'||s.routeIndex!==majorRi)return false;
