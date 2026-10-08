@@ -177,3 +177,31 @@ body.auth-locked #loginScreen,body.auth-loading #loginScreen{display:grid}
 .saltEstimate:active{filter:brightness(1.2)}
 .saltAddDialog{z-index:11000}
 .saltAddDialog[hidden]{display:none!important}
+
+/* Build 67: modalità navigatore a tutto schermo per viabilità maggiore */
+.majorNavMetrics{display:none}
+body.major-navigation #snowApp>header{display:none!important}
+body.major-navigation #snowApp>main{position:fixed!important;inset:0!important;height:100%!important}
+body.major-navigation #map{position:absolute!important;inset:0!important;height:100%!important;width:100%!important}
+body.major-navigation .majorNavHud{position:fixed!important;top:calc(env(safe-area-inset-top) + 10px)!important;z-index:3200!important;width:min(650px,calc(100% - 20px))!important;border-radius:20px!important;background:rgba(18,33,43,.97)!important}
+body.major-navigation .majorNavMetrics{position:fixed;z-index:3150;top:calc(env(safe-area-inset-top) + 92px);left:50%;transform:translateX(-50%);width:min(520px,calc(100% - 92px));display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px;border-radius:14px;background:rgba(8,19,29,.91);box-shadow:0 5px 18px #0006;color:#fff}
+body.major-navigation .majorNavMetrics[hidden]{display:none!important}
+body.major-navigation .majorNavMetrics span{display:grid;gap:1px;text-align:center;padding:4px 5px;border-radius:10px;background:rgba(31,55,69,.82)}
+body.major-navigation .majorNavMetrics b{font-size:13px;line-height:1.05}
+body.major-navigation .majorNavMetrics small{font-size:8px;color:#a9bdc9;text-transform:uppercase;letter-spacing:.45px}
+body.major-navigation #panel:has(#major:not([hidden])){position:fixed!important;left:10px!important;right:10px!important;bottom:max(10px,env(safe-area-inset-bottom))!important;width:auto!important;z-index:3100!important;padding:0!important}
+body.major-navigation #major>.majorStateAction{margin:0!important}
+body.major-navigation #major>.majorStateAction button{min-height:62px!important;border-radius:20px!important;font-size:18px!important;box-shadow:0 8px 24px #0008!important}
+body.major-navigation #saltEstimate{display:none!important}
+body.major-navigation #major>.operatorMoreBtn{top:calc(env(safe-area-inset-top) + 94px)!important;right:10px!important;left:auto!important;z-index:3250!important;background:rgba(8,19,29,.94)!important}
+body.major-navigation #major>.majorMoreMenu{top:calc(env(safe-area-inset-top) + 142px)!important;bottom:calc(env(safe-area-inset-bottom) + 84px)!important;z-index:3300!important}
+body.major-navigation .leaflet-top.leaflet-right{top:145px}
+body.major-navigation .leaflet-control-zoom{display:none}
+body.major-navigation .majorVehicleIcon span{width:44px;height:44px;border-width:4px;font-size:25px;box-shadow:0 4px 16px #0009}
+@media(max-width:799px){
+ body.major-navigation .majorNavHud{grid-template-columns:52px minmax(0,1fr) 40px!important;padding:10px!important}
+ body.major-navigation .majorNavMetrics{top:calc(env(safe-area-inset-top) + 84px);width:calc(100% - 76px)}
+ body.major-navigation #major>.operatorMoreBtn{top:calc(env(safe-area-inset-top) + 86px)!important}
+ body.major-navigation #major>.majorMoreMenu{top:calc(env(safe-area-inset-top) + 132px)!important}
+}
+
