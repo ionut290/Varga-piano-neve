@@ -16,7 +16,7 @@ window.addEventListener('resize',repairMapSize);window.addEventListener('orienta
 if(window.ResizeObserver)new ResizeObserver(repairMapSize).observe(document.getElementById('map'));
 const rebuiltNames=window.ROUTE_INSTRUCTIONS?.names||[];const rebuiltNotes=window.ROUTE_INSTRUCTIONS?.notes||[];const routes=rebuiltNotes.map((notes,rix)=>({name:rebuiltNames[rix]||('Percorso '+(rix+1)),segments:notes.map((name,i)=>({name,coords:window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.coords||[]})),points:notes}));
 const majorRoutes=window.MAJOR_ROUTES||[];
-const APP_BUILD='64';const SW_BUILD='64';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
+const APP_BUILD='65';const SW_BUILD='65';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
 let ri=0,pi=0,majorRi=savedMajorRoute!==null&&Number.isInteger(+savedMajorRoute)&&+savedMajorRoute>=0&&+savedMajorRoute<majorRoutes.length?+savedMajorRoute:0,majorPi=0,currentMode="major",minorMapOpened=false;
 const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),majorDone=new Set(JSON.parse(localStorage.getItem('majorDone')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null,majorGuideLine=null,majorPauseMarker=null,majorVehicleMarker=null;const majorNav={mode:'idle',target:null,pausePoint:null,resumeMode:null,resumeTarget:null,path:[],maneuvers:[],pathIndex:0,lastVoiceKey:'',lastInsideStreet:null,lastRerouteAt:0,rerouting:false};
 async function roadRoute(a,b){try{const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson&steps=true';const j=await fetch(u).then(r=>r.json());if(j.routes&&j.routes[0])return j.routes[0]}catch(e){}return null}
@@ -52,9 +52,14 @@ function startMajorInsideNavigation(ll,accuracy=15){
  clearMajorNavLine();majorNav.mode='inside';majorNav.target=null;majorNav.lastInsideStreet=null;majorNav.lastVoiceKey='';resetTrackingJoin();updateMajorInsideGuide(ll,accuracy)
 }
 function updateMajorInsideGuide(ll,accuracy=15){
- const best=nearestMajorLanePoint(ll,majorTracking.lastRaw&&d(majorTracking.lastRaw,ll)>=3?headingDeg(majorTracking.lastRaw,ll):null);if(!best)return;
+ const moveHeading=majorTracking.lastRaw&&d(majorTracking.lastRaw,ll)>=3?headingDeg(majorTracking.lastRaw,ll):null,best=trackedMajorLanePoint(ll,moveHeading,accuracy);if(!best)return;
  const allowed=majorAllowedDistance(accuracy),lane=majorTracking.lanes[best.laneIndex],street=majorRoutes[majorRi]?.streets?.[best.streetIndex],streetName=street?.name||'percorso assegnato';
- if(best.dist>allowed*1.6){clearMajorGuide();setMajorNavHud(true,'⚠','Sei fuori dal percorso',fmtDist(best.dist),'Rientra sulla linea colorata');if(majorNav.lastVoiceKey!=='off-route'){majorNav.lastVoiceKey='off-route';majorSpeak('Sei fuori dal percorso. Rientra sulla linea assegnata.','off-route',true)}return}
+ if(best.dist>allowed*1.6){
+  clearMajorGuide();
+  if(best.stabilizing){setMajorNavHud(true,'⌛','Verifico la posizione',fmtDist(best.dist),'Mantengo la corsia corrente');$('majorRouteInfo').textContent='GPS in verifica • attendo prima di ricalcolare';return}
+  setMajorNavHud(true,'⚠','Sei fuori dal percorso',fmtDist(best.dist),'Rientra sulla linea colorata');if(majorNav.lastVoiceKey!=='off-route'){majorNav.lastVoiceKey='off-route';majorSpeak('Sei fuori dal percorso. Rientra sulla linea assegnata.','off-route',true)}return
+ }
+ majorNav.lastVoiceKey=majorNav.lastVoiceKey==='off-route'?'':majorNav.lastVoiceKey;
  clearMajorGuide();const from=Math.max(0,best.segmentIndex),to=Math.min(lane.coords.length,from+10),ahead=[best.point,...lane.coords.slice(from+1,to)];if(ahead.length>1)majorGuideLine=L.polyline(ahead,{color:'#ff9800',weight:7,opacity:.92}).addTo(routeLayer);
  const nextStreet=majorRoutes[majorRi]?.streets?.[Math.min(best.streetIndex+1,(majorRoutes[majorRi]?.streets?.length||1)-1)]?.name||'';
  setMajorNavHud(true,'↑','Continua su '+streetName,'',nextStreet&&nextStreet!==streetName?'Prossimo tratto: '+nextStreet:'Percorso '+(majorRoutes[majorRi]?.code||''));
@@ -225,7 +230,7 @@ async function showMajorRoute(){
 
 const majorCoverageLayer=L.layerGroup().addTo(map);
 const MAJOR_SESSION_KEY='vargaMajorWorkSessionV1';let majorCoverageSegments=[],lastMajorSessionSave=0;
-const majorTracking={routeIndex:null,lanes:[],lastRaw:null,lastSnap:null,lastLane:null,coveredMeters:0};
+const majorTracking={routeIndex:null,lanes:[],lastRaw:null,lastSnap:null,lastLane:null,coveredMeters:0,lockedLane:null,lockedStreet:null,candidateLane:null,candidateHits:0,offRouteSince:0};
 function headingDeg(a,b){const y=Math.sin((b[1]-a[1])*Math.PI/180)*Math.cos(b[0]*Math.PI/180),x=Math.cos(a[0]*Math.PI/180)*Math.sin(b[0]*Math.PI/180)-Math.sin(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.cos((b[1]-a[1])*Math.PI/180);return(Math.atan2(y,x)*180/Math.PI+360)%360}
 function angleDiff(a,b){const x=Math.abs(a-b)%360;return Math.min(x,360-x)}
 function nearestOnSegment(p,a,b){const lat=p[0]*Math.PI/180,kx=111320*Math.cos(lat),ky=110540,ax=a[1]*kx,ay=a[0]*ky,bx=b[1]*kx,by=b[0]*ky,px=p[1]*kx,py=p[0]*ky,dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy,t=l2?Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/l2)):0,qx=ax+t*dx,qy=ay+t*dy;return{point:[qy/ky,qx/kx],dist:Math.hypot(px-qx,py-qy),bearing:headingDeg(a,b),t}}
@@ -233,6 +238,33 @@ function nearestMajorLanePoint(p,moveHeading=null){
  let best=null;
  for(let li=0;li<majorTracking.lanes.length;li++){const lane=majorTracking.lanes[li],pts=lane.coords;for(let i=1;i<pts.length;i++){const q=nearestOnSegment(p,pts[i-1],pts[i]);const dirPenalty=moveHeading==null?0:angleDiff(moveHeading,q.bearing)*.08,score=q.dist+dirPenalty;if(!best||score<best.score)best={...q,score,laneIndex:li,segmentIndex:i-1,streetIndex:lane.streetIndex,direction:lane.direction}}}
  return best
+}
+function nearestMajorPointOnLane(p,laneIndex,moveHeading=null){
+ const lane=majorTracking.lanes[laneIndex];if(!lane?.coords?.length)return null;let best=null,pts=lane.coords;
+ for(let i=1;i<pts.length;i++){const q=nearestOnSegment(p,pts[i-1],pts[i]),dirPenalty=moveHeading==null?0:angleDiff(moveHeading,q.bearing)*.08,score=q.dist+dirPenalty;if(!best||score<best.score)best={...q,score,laneIndex,segmentIndex:i-1,streetIndex:lane.streetIndex,direction:lane.direction}}
+ return best
+}
+function lockMajorLane(best){
+ if(!best)return null;majorTracking.lockedLane=best.laneIndex;majorTracking.lockedStreet=best.streetIndex;majorTracking.candidateLane=null;majorTracking.candidateHits=0;majorTracking.offRouteSince=0;return best
+}
+function trackedMajorLanePoint(p,moveHeading=null,accuracy=15){
+ const nearest=nearestMajorLanePoint(p,moveHeading);if(!nearest)return null;
+ if(majorTracking.lockedLane==null||!majorTracking.lanes[majorTracking.lockedLane])return lockMajorLane(nearest);
+ const locked=nearestMajorPointOnLane(p,majorTracking.lockedLane,moveHeading);if(!locked)return lockMajorLane(nearest);
+ const allowed=majorAllowedDistance(accuracy),sameLane=nearest.laneIndex===majorTracking.lockedLane;
+ if(locked.dist<=allowed*1.7){
+  majorTracking.offRouteSince=0;
+  const ordered=nearest.streetIndex>=Number(majorTracking.lockedStreet??0)&&nearest.streetIndex<=Number(majorTracking.lockedStreet??0)+1;
+  if(!sameLane&&ordered&&nearest.dist+8<locked.dist){
+   if(majorTracking.candidateLane===nearest.laneIndex)majorTracking.candidateHits++;else{majorTracking.candidateLane=nearest.laneIndex;majorTracking.candidateHits=1}
+   if(majorTracking.candidateHits>=5)return lockMajorLane(nearest)
+  }else{majorTracking.candidateLane=null;majorTracking.candidateHits=0}
+  return locked
+ }
+ majorTracking.candidateLane=null;majorTracking.candidateHits=0;
+ if(!majorTracking.offRouteSince)majorTracking.offRouteSince=Date.now();
+ if(Date.now()-majorTracking.offRouteSince<5000)return {...locked,stabilizing:true};
+ return lockMajorLane(nearest)
 }
 async function prepareMajorTrackingRoute(){
  const r=majorRoutes[majorRi];if(!r)return false;
@@ -244,7 +276,7 @@ async function prepareMajorTrackingRoute(){
  })));
  majorTracking.routeIndex=majorRi;majorTracking.lanes=lanes;majorTracking.lastRaw=null;majorTracking.lastSnap=null;majorTracking.lastLane=null;return lanes.length>0
 }
-function resetTrackingJoin(){majorTracking.lastRaw=null;majorTracking.lastSnap=null;majorTracking.lastLane=null}
+function resetTrackingJoin(){majorTracking.lastRaw=null;majorTracking.lastSnap=null;majorTracking.lastLane=null;majorTracking.lockedLane=null;majorTracking.lockedStreet=null;majorTracking.candidateLane=null;majorTracking.candidateHits=0;majorTracking.offRouteSince=0}
 
 let activeStreetWork=null,lastStreetWorkIndex=null;
 async function switchStreetWork(index){
@@ -263,8 +295,8 @@ async function exportStreetWorkExcel(){
 
 function markMajorPassed(ll,accuracy){
  if(currentMode!=='major'||!mapState.active||mapState.paused||majorNav.mode!=='inside'||!majorTracking.lanes.length||accuracy>35)return false;
- const moveHeading=majorTracking.lastRaw&&d(majorTracking.lastRaw,ll)>=3?headingDeg(majorTracking.lastRaw,ll):null,best=nearestMajorLanePoint(ll,moveHeading);majorTracking.lastRaw=ll;
- const allowed=Math.max(14,Math.min(28,accuracy+6));if(!best||best.dist>allowed){majorTracking.lastSnap=null;majorTracking.lastLane=null;$('majorRouteInfo').textContent='⚪ Fuori percorso • spostamento NON segnato come passato';return false}
+ const moveHeading=majorTracking.lastRaw&&d(majorTracking.lastRaw,ll)>=3?headingDeg(majorTracking.lastRaw,ll):null,best=trackedMajorLanePoint(ll,moveHeading,accuracy);majorTracking.lastRaw=ll;
+ const allowed=Math.max(14,Math.min(28,accuracy+6));if(!best||best.stabilizing||best.dist>allowed){majorTracking.lastSnap=null;majorTracking.lastLane=null;$('majorRouteInfo').textContent=best?.stabilizing?'GPS in verifica • traccia verde momentaneamente sospesa':'⚪ Fuori percorso • spostamento NON segnato come passato';return false}
  if(majorTracking.lastSnap&&majorTracking.lastLane===best.laneIndex){const jump=d(majorTracking.lastSnap,best.point);if(jump>=1&&jump<=80){const a=majorTracking.lastSnap,b=best.point;L.polyline([a,b],{color:'#20bd62',weight:11,opacity:.95,lineCap:'round',interactive:false}).addTo(majorCoverageLayer);majorTracking.coveredMeters+=jump;majorCoverageSegments.push([majorRi,+a[0].toFixed(6),+a[1].toFixed(6),+b[0].toFixed(6),+b[1].toFixed(6)]);saveMajorWorkSession()}}
  majorTracking.lastSnap=best.point;majorTracking.lastLane=best.laneIndex;
  switchStreetWork(best.streetIndex);const street=majorRoutes[majorRi]?.streets?.[best.streetIndex];$('majorRouteInfo').textContent='🧭 SUL PERCORSO • '+(street?.name||'tratto')+' • passato evidenziato in verde';
