@@ -205,3 +205,8 @@ body.major-navigation .majorVehicleIcon span{width:44px;height:44px;border-width
  body.major-navigation #major>.majorMoreMenu{top:calc(env(safe-area-inset-top) + 132px)!important}
 }
 
+
+
+.followPosition{position:absolute;right:12px;top:160px;z-index:1250;padding:12px 16px;border-radius:24px;background:#102d40;color:#fff;box-shadow:0 3px 12px #0006;font-size:13px;min-height:44px;touch-action:manipulation}
+.followPosition[aria-pressed="false"]{background:#1677ff}
+body.major-navigation .followPosition{position:fixed;top:calc(env(safe-area-inset-top) + 150px);z-index:3250}

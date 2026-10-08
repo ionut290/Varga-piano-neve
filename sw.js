@@ -1,4 +1,4 @@
-const C='varga-piano-neve-v68-street-work-register',A=['./','./index.html','./style.css?v=67','./major-network.js?v=3','./major-offline-nav.js?v=3','./major-routes.js?v=4','./routes-rebuilt.js?v=4','./routes-instructions.js?v=1','./snow-config.js?v=67','./snow-auth.js?v=67','./app.js?v=67','./manifest.webmanifest'];
+const C='varga-piano-neve-v69-follow-green-trace',A=['./','./index.html','./style.css?v=69','./major-network.js?v=3','./major-offline-nav.js?v=3','./major-routes.js?v=4','./routes-rebuilt.js?v=4','./routes-instructions.js?v=1','./snow-config.js?v=69','./snow-auth.js?v=69','./app.js?v=69','./manifest.webmanifest'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(A)))});
 self.addEventListener('activate',e=>e.waitUntil(Promise.all([self.clients.claim(),caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x))))])));
 self.addEventListener('message',e=>{if(e.data?.type==='SKIP_WAITING')self.skipWaiting()});
@@ -18,3 +18,4 @@ self.addEventListener('fetch',e=>{
  }
  e.respondWith(fetch(req).then(r=>{if(req.method==='GET'&&(r.ok||r.type==='opaque')){const x=r.clone();caches.open(C).then(c=>c.put(req,x))}return r}).catch(()=>caches.match(req)))
 });
+
