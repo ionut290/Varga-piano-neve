@@ -29,6 +29,6 @@ function setup(options={}) {
  const state={window:{VargaScreenAwake:{setActive:v=>active=v}},mapState:{active:false},navTarget:null};vm.createContext(state);
  vm.runInContext(app.match(/function syncScreenAwake\(\)\{[^\n]+/)[0],state);
  state.syncScreenAwake();assert.equal(active,false);state.mapState.active=true;state.mapState.paused=true;state.syncScreenAwake();assert.equal(active,true,'active tour includes pauses');state.mapState.active=false;state.navTarget=[44,11];state.syncScreenAwake();assert.equal(active,true,'minor navigation');state.navTarget=null;state.syncScreenAwake();assert.equal(active,false);
- assert.ok(app.includes('navTarget=p;syncScreenAwake();'));assert.ok(app.includes('navTarget=null;syncScreenAwake()'));
+ assert.match(app,/navTarget=p;.*?syncScreenAwake\(\);/);assert.ok(app.includes('navTarget=null;syncScreenAwake()'));
  console.log('PASS: wake lock lifecycle, visibility, late grant, page restore, refusal, unsupported API and navigation integration');
 })().catch(error=>{console.error(error);process.exitCode=1});
