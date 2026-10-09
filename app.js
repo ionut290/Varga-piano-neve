@@ -16,7 +16,7 @@ window.addEventListener('resize',repairMapSize);window.addEventListener('orienta
 if(window.ResizeObserver)new ResizeObserver(repairMapSize).observe(document.getElementById('map'));
 const rebuiltNames=window.ROUTE_INSTRUCTIONS?.names||[];const rebuiltNotes=window.ROUTE_INSTRUCTIONS?.notes||[];const routes=rebuiltNotes.map((notes,rix)=>({name:rebuiltNames[rix]||('Percorso '+(rix+1)),segments:notes.map((name,i)=>({name,coords:window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.coords||[]})),points:notes}));
 const majorRoutes=window.MAJOR_ROUTES||[];
-const APP_BUILD='72';const SW_BUILD='72';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
+const APP_BUILD='73';const SW_BUILD='73';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
 let ri=0,pi=0,majorRi=savedMajorRoute!==null&&Number.isInteger(+savedMajorRoute)&&+savedMajorRoute>=0&&+savedMajorRoute<majorRoutes.length?+savedMajorRoute:0,majorPi=0,currentMode="major",minorMapOpened=false;
 const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),majorDone=new Set(JSON.parse(localStorage.getItem('majorDone')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null,majorGuideLine=null,majorPauseMarker=null,majorVehicleMarker=null;const majorNav={mode:'idle',target:null,pausePoint:null,resumeMode:null,resumeTarget:null,path:[],maneuvers:[],pathIndex:0,lastVoiceKey:'',lastInsideStreet:null,lastRerouteAt:0,rerouting:false};
 async function roadRoute(a,b){try{const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson&steps=true';const j=await fetch(u).then(r=>r.json());if(j.routes&&j.routes[0])return j.routes[0]}catch(e){}return null}
@@ -209,9 +209,26 @@ function findMajorWaysByName(value){
  const winner=normRoadName(scored[0].w.name);return network.filter(w=>normRoadName(w.name)===winner)
 }
 function findMajorWays(street){
+ if(street._adminDeleted)return [];
+ if(street._adminCoords?.length)return [{id:'admin-'+street.name,coords:street._adminCoords}];
+ const parking=window.MAJOR_PARKING?.[street.name],parkingOnly=/^PARCH(?:\.|EGGI)/i.test(street.name);
  const aliases=Array.isArray(street.searchNames)&&street.searchNames.length?street.searchNames:[street.searchName||street.name],seen=new Set(),out=[];
- for(const alias of aliases)for(const w of findMajorWaysByName(alias)){if(!seen.has(w.id)){seen.add(w.id);out.push(w)}}
+ if(!parkingOnly)for(const alias of aliases)for(const w of findMajorWaysByName(alias)){if(!seen.has(w.id)){seen.add(w.id);out.push(w)}}
+ for(const w of parking?.ways||[])if(!seen.has(w.id)){seen.add(w.id);out.push(w)}
  return out
+}
+function majorParkingAreas(street){return street?._adminDeleted||street?._adminCoords?.length?[]:window.MAJOR_PARKING?.[street?.name]?.areas||[]}
+function drawMajorParking(r,s,active=true){
+ const bounds=[],color=majorColor(r);
+ for(const area of majorParkingAreas(s)){L.polygon(area.coords,{color,weight:active?4:3,opacity:1,fillOpacity:.12}).addTo(routeLayer).bindPopup('<b>'+escapeText(s.name)+'</b><br>Parcheggio da lavorare: accessi e manovre inclusi');bounds.push(...area.coords)}
+ return bounds
+}
+function nearestMajorParkingPoint(p){
+ let best=null;
+ for(let i=0;i<majorTracking.lanes.length;i++){const lane=majorTracking.lanes[i];if(!lane.area)continue;const ring=lane.coords.map(q=>[q[1],q[0]]);if(!pointInRing(p,ring))continue;
+  const candidate={point:p.slice(),dist:0,score:0,bearing:0,laneIndex:i,segmentIndex:0,streetIndex:lane.streetIndex,direction:0,parking:true};
+  if(!best||/^PARCH(?:\.|EGGI)/i.test(majorRoutes[majorRi]?.streets?.[lane.streetIndex]?.name||''))best=candidate;
+ }return best
 }
 function offsetRoad(coords,meters){
  return coords.map((p,i)=>{const a=coords[Math.max(0,i-1)],b=coords[Math.min(coords.length-1,i+1)],lat=p[0]*Math.PI/180,dx=(b[1]-a[1])*111320*Math.cos(lat),dy=(b[0]-a[0])*110540,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;return[p[0]+ny*meters/110540,p[1]+nx*meters/(111320*Math.cos(lat))]})
@@ -221,7 +238,9 @@ function addMajorArrow(coords,color){
  if(coords.length<2)return;const i=Math.floor(coords.length/2),p=coords[i],deg=roadBearing(coords)-90;L.marker(p,{interactive:false,icon:L.divIcon({className:'majorArrow',html:'<span style="color:'+color+';transform:rotate('+deg+'deg)">➤</span>',iconSize:[24,24],iconAnchor:[12,12]})}).addTo(routeLayer)
 }
 function majorColor(r){return r.code==='rosso'?'#d83f3f':r.code==='blu'?'#1976d2':'#d4a900'}
-function drawMajorWayPair(coords,r,s,active=true){
+function drawMajorWayPair(coords,r,s,active=true,parkingWay=false){
+ if(coords.length<2)return [];
+ if(parkingWay){const parts=clipMajorCoords(coords);for(const part of parts)L.polyline(part,{color:majorColor(r),weight:active?6:4,opacity:1}).addTo(routeLayer).bindPopup('<b>'+escapeText(s.name)+'</b><br>Accesso e corsello del parcheggio');return parts}
  const color=majorColor(r),streetIndex=majorRoutes[majorRi]?.streets?.indexOf(s)??-1,popup='<b>'+escapeText(s.name)+'</b><br>'+r.name+' • '+fmtDist(s.meters)+'<br><b>Doppio passaggio:</b> una corsia per senso di marcia<br><b>Limite:</b> solo Comune di Castel Maggiore',drawn=[];
  const centers=clipMajorCoords(coords);for(const center of centers){const aParts=clipMajorCoords(offsetRoad(center,-2.4)),bParts=clipMajorCoords(offsetRoad(center,2.4)).map(x=>x.slice().reverse());
   for(const a of aParts){L.polyline(a,{color,weight:active?6:4,opacity:active?1:.7}).addTo(routeLayer).on('click',e=>{if(routeEditMode==='select-edit'||routeEditMode==='select-delete'){L.DomEvent.stopPropagation(e);selectRouteForAdmin('major',majorRoutes[majorRi]?.streets?.indexOf(s)??-1,s.name,a)}}).bindPopup(popup+adminRoutePopup(s.name,'major',streetIndex,a));drawn.push(a);if(active)addMajorArrow(a,color)}
@@ -231,14 +250,14 @@ function drawMajorWayPair(coords,r,s,active=true){
 async function fallbackMajorPoint(r,s){await loadMajorRoadNetwork();const target=majorSearchName(s.searchName||s.name),scored=majorRoadNetwork.map(w=>({w,score:roadNameScore(target,w.name)})).sort((a,b)=>b.score-a.score),w=scored[0]?.score>=.35?scored[0].w:null;if(!w?.coords?.length)return null;const p=w.coords[Math.floor(w.coords.length/2)];L.circleMarker(p,{radius:11,color:'#fff',weight:4,fillColor:majorColor(r),fillOpacity:1}).addTo(routeLayer).bindPopup('<b>'+escapeText(s.name)+'</b><br>'+r.name+' • '+fmtDist(s.meters)+'<br>Posizione ricavata dal reticolo offline');return p}
 async function focusMajorStreet(){
  const r=majorRoutes[majorRi],s=r?.streets?.[majorPi];if(!s)return;routeLayer.clearLayers();$('majorRouteInfo').textContent='Carico la strada e preparo andata + ritorno…';
- try{await loadMajorRoadNetwork();const ways=findMajorWays(s),bounds=[];ways.forEach(w=>drawMajorWayPair(w.coords,r,s,true).forEach(x=>bounds.push(...x)));if(bounds.length){map.fitBounds(bounds,{padding:[35,35],maxZoom:17});$('majorRouteInfo').textContent='Doppio passaggio • '+s.name+' • '+fmtDist(s.meters)+' • entrambe le corsie'}else{const p=await fallbackMajorPoint(r,s);if(p){map.setView(p,17);$('majorRouteInfo').textContent='Strada localizzata; asse OSM da verificare prima del doppio passaggio'}else $('majorRouteInfo').textContent='Strada non trovata automaticamente • '+s.name}}catch(e){const p=await fallbackMajorPoint(r,s);if(p)map.setView(p,17);$('majorRouteInfo').textContent='Reticolo stradale non disponibile: mostrata posizione indicativa'}
+ try{await loadMajorRoadNetwork();const ways=findMajorWays(s),bounds=drawMajorParking(r,s,true);ways.forEach(w=>drawMajorWayPair(w.coords,r,s,true,w.parking).forEach(x=>bounds.push(...x)));if(bounds.length){map.fitBounds(bounds,{padding:[35,35],maxZoom:17});$('majorRouteInfo').textContent=s.name+' • '+fmtDist(s.meters)+(window.MAJOR_PARKING?.[s.name]?' • parcheggio e accessi inclusi':' • doppio passaggio su entrambe le corsie')}else{const p=await fallbackMajorPoint(r,s);if(p){map.setView(p,17);$('majorRouteInfo').textContent='Strada localizzata; asse OSM da verificare prima del doppio passaggio'}else $('majorRouteInfo').textContent='Strada non trovata automaticamente • '+s.name}}catch(e){const p=await fallbackMajorPoint(r,s);if(p)map.setView(p,17);$('majorRouteInfo').textContent='Reticolo stradale non disponibile: mostrata posizione indicativa'}
 }
 async function showMajorRoute(){
  const r=majorRoutes[majorRi];if(!r)return;routeLayer.clearLayers();$('majorRouteInfo').textContent='Carico '+r.name+' e preparo entrambe le corsie…';
  try{await loadMajorRoadNetwork();const bounds=[];let matched=0;
-  r.streets.forEach((s,i)=>{if(s._adminDeleted)return;const ways=s._adminCoords?.length?[{coords:s._adminCoords}]:findMajorWays(s);if(ways.length){matched++;ways.forEach(w=>drawMajorWayPair(w.coords,r,s,i===majorPi).forEach(x=>bounds.push(...x))) }});
+  r.streets.forEach((s,i)=>{if(s._adminDeleted)return;const ways=findMajorWays(s),areas=drawMajorParking(r,s,i===majorPi);bounds.push(...areas);if(ways.length||areas.length){matched++;ways.forEach(w=>drawMajorWayPair(w.coords,r,s,i===majorPi,w.parking).forEach(x=>bounds.push(...x))) }});
   if(bounds.length)map.fitBounds(bounds,{padding:[30,30],maxZoom:15});
-  $('majorRouteInfo').textContent=r.name+' • '+matched+'/'+r.streets.length+' voci agganciate al reticolo stradale • doppio passaggio su entrambe le corsie';
+  $('majorRouteInfo').textContent=r.name+' • '+matched+'/'+r.streets.length+' voci agganciate al reticolo stradale • corsie, accessi e parcheggi inclusi';
  }catch(e){$('majorRouteInfo').textContent='Reticolo offline non disponibile • '+(e?.message||'file mancante')}
 }
 
@@ -251,19 +270,20 @@ function angleDiff(a,b){const x=Math.abs(a-b)%360;return Math.min(x,360-x)}
 function nearestOnSegment(p,a,b){const lat=p[0]*Math.PI/180,kx=111320*Math.cos(lat),ky=110540,ax=a[1]*kx,ay=a[0]*ky,bx=b[1]*kx,by=b[0]*ky,px=p[1]*kx,py=p[0]*ky,dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy,t=l2?Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/l2)):0,qx=ax+t*dx,qy=ay+t*dy;return{point:[qy/ky,qx/kx],dist:Math.hypot(px-qx,py-qy),bearing:headingDeg(a,b),t}}
 function nearestMajorLanePoint(p,moveHeading=null){
  let best=null;
- for(let li=0;li<majorTracking.lanes.length;li++){const lane=majorTracking.lanes[li],pts=lane.coords;for(let i=1;i<pts.length;i++){const q=nearestOnSegment(p,pts[i-1],pts[i]);const dirPenalty=moveHeading==null?0:angleDiff(moveHeading,q.bearing)*.08,score=q.dist+dirPenalty;if(!best||score<best.score)best={...q,score,laneIndex:li,segmentIndex:i-1,streetIndex:lane.streetIndex,direction:lane.direction}}}
+ const parking=typeof nearestMajorParkingPoint==='function'?nearestMajorParkingPoint(p):null;if(parking)return parking;
+ for(let li=0;li<majorTracking.lanes.length;li++){const lane=majorTracking.lanes[li],pts=lane.coords;if(lane.area)continue;for(let i=1;i<pts.length;i++){const q=nearestOnSegment(p,pts[i-1],pts[i]);const dirPenalty=moveHeading==null||lane.parking?0:angleDiff(moveHeading,q.bearing)*.08,score=q.dist+dirPenalty+(lane.parking?3:0);if(!best||score<best.score)best={...q,score,laneIndex:li,segmentIndex:i-1,streetIndex:lane.streetIndex,direction:lane.direction,parking:!!lane.parking}}}
  return best
 }
 function nearestMajorPointOnLane(p,laneIndex,moveHeading=null){
- const lane=majorTracking.lanes[laneIndex];if(!lane?.coords?.length)return null;let best=null,pts=lane.coords;
- for(let i=1;i<pts.length;i++){const q=nearestOnSegment(p,pts[i-1],pts[i]),dirPenalty=moveHeading==null?0:angleDiff(moveHeading,q.bearing)*.08,score=q.dist+dirPenalty;if(!best||score<best.score)best={...q,score,laneIndex,segmentIndex:i-1,streetIndex:lane.streetIndex,direction:lane.direction}}
+ const lane=majorTracking.lanes[laneIndex];if(!lane?.coords?.length||lane.area)return null;let best=null,pts=lane.coords;
+ for(let i=1;i<pts.length;i++){const q=nearestOnSegment(p,pts[i-1],pts[i]),dirPenalty=moveHeading==null?0:angleDiff(moveHeading,q.bearing)*.08,score=q.dist+dirPenalty+(lane.parking?3:0);if(!best||score<best.score)best={...q,score,laneIndex,segmentIndex:i-1,streetIndex:lane.streetIndex,direction:lane.direction,parking:!!lane.parking}}
  return best
 }
 function lockMajorLane(best){
  if(!best)return null;majorTracking.lockedLane=best.laneIndex;majorTracking.lockedStreet=best.streetIndex;majorTracking.candidateLane=null;majorTracking.candidateHits=0;majorTracking.offRouteSince=0;return best
 }
 function trackedMajorLanePoint(p,moveHeading=null,accuracy=15){
- const nearest=nearestMajorLanePoint(p,moveHeading);if(!nearest)return null;
+ const nearest=nearestMajorLanePoint(p,moveHeading);if(!nearest)return null;if(nearest.parking)return lockMajorLane(nearest);
  const locked=nearestMajorPointOnLane(p,majorTracking.lockedLane,moveHeading),allowed=majorAllowedDistance(accuracy);
  // Keep small GPS drift stable, but switch immediately on a turn or a better road match.
  if(locked&&locked.dist<=allowed&&(moveHeading==null||angleDiff(moveHeading,locked.bearing)<90)&&locked.score<=nearest.score+3)return locked;
@@ -279,10 +299,15 @@ async function prepareMajorTrackingRoute(){
  const r=majorRoutes[majorRi];if(!r)return false;
  if(majorTracking.routeIndex===majorRi&&majorTracking.lanes.length)return true;
  await loadMajorRoadNetwork();const lanes=[];
- r.streets.forEach((s,streetIndex)=>findMajorWays(s).forEach(w=>clipMajorCoords(w.coords).forEach(center=>{
+ r.streets.forEach((s,streetIndex)=>{
+  if(s._adminDeleted)return;
+  findMajorWays(s).forEach(w=>clipMajorCoords(w.coords).forEach(center=>{
+   if(w.parking){lanes.push({coords:center,streetIndex,direction:0,parking:true});return}
    clipMajorCoords(offsetRoad(center,-2.4)).forEach(coords=>lanes.push({coords,streetIndex,direction:1}));
    clipMajorCoords(offsetRoad(center,2.4)).forEach(coords=>lanes.push({coords:coords.slice().reverse(),streetIndex,direction:-1}));
- })));
+  }));
+  for(const area of majorParkingAreas(s))lanes.push({coords:area.coords,streetIndex,direction:0,area:true,parking:true});
+ });
  majorTracking.routeIndex=majorRi;majorTracking.lanes=lanes;majorTracking.lastRaw=null;majorTracking.lastSnap=null;majorTracking.lastLane=null;return lanes.length>0
 }
 function resetTrackingJoin(){majorTracking.lastRaw=null;majorTracking.lastSnap=null;majorTracking.lastLane=null;majorTracking.lockedLane=null;majorTracking.lockedStreet=null;majorTracking.candidateLane=null;majorTracking.candidateHits=0;majorTracking.offRouteSince=0;majorTracking.headingRaw=null;majorTracking.moveHeading=null}
@@ -351,14 +376,14 @@ function majorCoveragePath(best,rawDistance,allowed){
  const a=majorTracking.lastSnap,b=best.point;if(!a)return [];
  if(!Number.isFinite(rawDistance)||rawDistance>100||d(a,b)>rawDistance+allowed*2)return [];
  const lane=majorTracking.lanes[best.laneIndex];let points=[a,b];
- if(majorTracking.lastLane===best.laneIndex&&lane?.coords?.length){
+ if(!best.parking&&majorTracking.lastLane===best.laneIndex&&lane?.coords?.length){
   const previous=nearestMajorPointOnLane(a,best.laneIndex),from=previous?.segmentIndex,to=best.segmentIndex;
   if(Number.isInteger(from)&&Number.isInteger(to)){
    const middle=from<=to?lane.coords.slice(from+1,to+1):lane.coords.slice(to+1,from+1).reverse();
    const curved=[a,...middle,b],length=curved.slice(1).reduce((sum,p,i)=>sum+d(curved[i],p),0);
    if(length<=rawDistance*1.8+12)points=curved;
   }
- }else{
+ }else if(!best.parking){
   // Connect adjoining street fragments through their shared junction when available.
   const previousLane=majorTracking.lanes[majorTracking.lastLane];
   const previous=nearestMajorPointOnLane(a,majorTracking.lastLane);
