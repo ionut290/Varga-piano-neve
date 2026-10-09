@@ -16,7 +16,7 @@ window.addEventListener('resize',repairMapSize);window.addEventListener('orienta
 if(window.ResizeObserver)new ResizeObserver(repairMapSize).observe(document.getElementById('map'));
 const rebuiltNames=window.ROUTE_INSTRUCTIONS?.names||[];const rebuiltNotes=window.ROUTE_INSTRUCTIONS?.notes||[];const routes=rebuiltNotes.map((notes,rix)=>({name:rebuiltNames[rix]||('Percorso '+(rix+1)),segments:notes.map((name,i)=>({name,coords:window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.coords||[]})),points:notes}));
 const majorRoutes=window.MAJOR_ROUTES||[];
-const APP_BUILD='71';const SW_BUILD='71';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
+const APP_BUILD='72';const SW_BUILD='72';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
 let ri=0,pi=0,majorRi=savedMajorRoute!==null&&Number.isInteger(+savedMajorRoute)&&+savedMajorRoute>=0&&+savedMajorRoute<majorRoutes.length?+savedMajorRoute:0,majorPi=0,currentMode="major",minorMapOpened=false;
 const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),majorDone=new Set(JSON.parse(localStorage.getItem('majorDone')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null,majorGuideLine=null,majorPauseMarker=null,majorVehicleMarker=null;const majorNav={mode:'idle',target:null,pausePoint:null,resumeMode:null,resumeTarget:null,path:[],maneuvers:[],pathIndex:0,lastVoiceKey:'',lastInsideStreet:null,lastRerouteAt:0,rerouting:false};
 async function roadRoute(a,b){try{const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson&steps=true';const j=await fetch(u).then(r=>r.json());if(j.routes&&j.routes[0])return j.routes[0]}catch(e){}return null}
@@ -66,7 +66,7 @@ function startMajorInsideNavigation(ll,accuracy=15){
  clearMajorNavLine();majorNav.mode='inside';majorNav.target=null;majorNav.lastInsideStreet=null;majorNav.lastVoiceKey='';resetTrackingJoin();updateMajorInsideGuide(ll,accuracy)
 }
 function updateMajorInsideGuide(ll,accuracy=15){
- const moveHeading=majorTracking.lastRaw&&d(majorTracking.lastRaw,ll)>=3?headingDeg(majorTracking.lastRaw,ll):null,best=trackedMajorLanePoint(ll,moveHeading,accuracy);if(!best)return;
+ const moveHeading=majorMovementHeading(ll),best=trackedMajorLanePoint(ll,moveHeading,accuracy);if(!best)return;
  const allowed=majorAllowedDistance(accuracy),lane=majorTracking.lanes[best.laneIndex],street=majorRoutes[majorRi]?.streets?.[best.streetIndex],streetName=street?.name||'percorso assegnato';
  if(best.dist>allowed*1.6){
   clearMajorGuide();
@@ -223,7 +223,7 @@ function addMajorArrow(coords,color){
 function majorColor(r){return r.code==='rosso'?'#d83f3f':r.code==='blu'?'#1976d2':'#d4a900'}
 function drawMajorWayPair(coords,r,s,active=true){
  const color=majorColor(r),streetIndex=majorRoutes[majorRi]?.streets?.indexOf(s)??-1,popup='<b>'+escapeText(s.name)+'</b><br>'+r.name+' • '+fmtDist(s.meters)+'<br><b>Doppio passaggio:</b> una corsia per senso di marcia<br><b>Limite:</b> solo Comune di Castel Maggiore',drawn=[];
- const centers=clipMajorCoords(coords);for(const center of centers){const aParts=clipMajorCoords(offsetRoad(center,2.4)),bParts=clipMajorCoords(offsetRoad(center,-2.4)).map(x=>x.slice().reverse());
+ const centers=clipMajorCoords(coords);for(const center of centers){const aParts=clipMajorCoords(offsetRoad(center,-2.4)),bParts=clipMajorCoords(offsetRoad(center,2.4)).map(x=>x.slice().reverse());
   for(const a of aParts){L.polyline(a,{color,weight:active?6:4,opacity:active?1:.7}).addTo(routeLayer).on('click',e=>{if(routeEditMode==='select-edit'||routeEditMode==='select-delete'){L.DomEvent.stopPropagation(e);selectRouteForAdmin('major',majorRoutes[majorRi]?.streets?.indexOf(s)??-1,s.name,a)}}).bindPopup(popup+adminRoutePopup(s.name,'major',streetIndex,a));drawn.push(a);if(active)addMajorArrow(a,color)}
   for(const b of bParts){L.polyline(b,{color,weight:active?6:4,opacity:active?1:.7,dashArray:'10 7'}).addTo(routeLayer).on('click',e=>{if(routeEditMode==='select-edit'||routeEditMode==='select-delete'){L.DomEvent.stopPropagation(e);selectRouteForAdmin('major',majorRoutes[majorRi]?.streets?.indexOf(s)??-1,s.name,b)}}).bindPopup(popup+adminRoutePopup(s.name,'major',streetIndex,b));drawn.push(b);if(active)addMajorArrow(b,color)}
  }return drawn
@@ -264,34 +264,28 @@ function lockMajorLane(best){
 }
 function trackedMajorLanePoint(p,moveHeading=null,accuracy=15){
  const nearest=nearestMajorLanePoint(p,moveHeading);if(!nearest)return null;
- if(majorTracking.lockedLane==null||!majorTracking.lanes[majorTracking.lockedLane])return lockMajorLane(nearest);
- const locked=nearestMajorPointOnLane(p,majorTracking.lockedLane,moveHeading);if(!locked)return lockMajorLane(nearest);
- const allowed=majorAllowedDistance(accuracy),sameLane=nearest.laneIndex===majorTracking.lockedLane;
- if(locked.dist<=allowed*1.7){
-  majorTracking.offRouteSince=0;
-  const ordered=nearest.streetIndex>=Number(majorTracking.lockedStreet??0)&&nearest.streetIndex<=Number(majorTracking.lockedStreet??0)+1;
-  if(!sameLane&&ordered&&nearest.dist+8<locked.dist){
-   if(majorTracking.candidateLane===nearest.laneIndex)majorTracking.candidateHits++;else{majorTracking.candidateLane=nearest.laneIndex;majorTracking.candidateHits=1}
-   if(majorTracking.candidateHits>=5)return lockMajorLane(nearest)
-  }else{majorTracking.candidateLane=null;majorTracking.candidateHits=0}
-  return locked
- }
- majorTracking.candidateLane=null;majorTracking.candidateHits=0;
- if(!majorTracking.offRouteSince)majorTracking.offRouteSince=Date.now();
- if(Date.now()-majorTracking.offRouteSince<5000)return {...locked,stabilizing:true};
+ const locked=nearestMajorPointOnLane(p,majorTracking.lockedLane,moveHeading),allowed=majorAllowedDistance(accuracy);
+ // Keep small GPS drift stable, but switch immediately on a turn or a better road match.
+ if(locked&&locked.dist<=allowed&&(moveHeading==null||angleDiff(moveHeading,locked.bearing)<90)&&locked.score<=nearest.score+3)return locked;
  return lockMajorLane(nearest)
+}
+function majorMovementHeading(ll){
+ const anchor=majorTracking.headingRaw||majorTracking.lastRaw;
+ if(anchor&&d(anchor,ll)>=3){majorTracking.moveHeading=headingDeg(anchor,ll);majorTracking.headingRaw=ll}
+ else if(!anchor)majorTracking.headingRaw=ll;
+ return majorTracking.moveHeading??null
 }
 async function prepareMajorTrackingRoute(){
  const r=majorRoutes[majorRi];if(!r)return false;
  if(majorTracking.routeIndex===majorRi&&majorTracking.lanes.length)return true;
  await loadMajorRoadNetwork();const lanes=[];
  r.streets.forEach((s,streetIndex)=>findMajorWays(s).forEach(w=>clipMajorCoords(w.coords).forEach(center=>{
-   clipMajorCoords(offsetRoad(center,2.4)).forEach(coords=>lanes.push({coords,streetIndex,direction:1}));
-   clipMajorCoords(offsetRoad(center,-2.4)).forEach(coords=>lanes.push({coords:coords.slice().reverse(),streetIndex,direction:-1}));
+   clipMajorCoords(offsetRoad(center,-2.4)).forEach(coords=>lanes.push({coords,streetIndex,direction:1}));
+   clipMajorCoords(offsetRoad(center,2.4)).forEach(coords=>lanes.push({coords:coords.slice().reverse(),streetIndex,direction:-1}));
  })));
  majorTracking.routeIndex=majorRi;majorTracking.lanes=lanes;majorTracking.lastRaw=null;majorTracking.lastSnap=null;majorTracking.lastLane=null;return lanes.length>0
 }
-function resetTrackingJoin(){majorTracking.lastRaw=null;majorTracking.lastSnap=null;majorTracking.lastLane=null;majorTracking.lockedLane=null;majorTracking.lockedStreet=null;majorTracking.candidateLane=null;majorTracking.candidateHits=0;majorTracking.offRouteSince=0}
+function resetTrackingJoin(){majorTracking.lastRaw=null;majorTracking.lastSnap=null;majorTracking.lastLane=null;majorTracking.lockedLane=null;majorTracking.lockedStreet=null;majorTracking.candidateLane=null;majorTracking.candidateHits=0;majorTracking.offRouteSince=0;majorTracking.headingRaw=null;majorTracking.moveHeading=null}
 
 const STREET_PENDING_KEY='snowStreetWorkPendingV2';
 let streetWorkTourId='',streetWorkState={},activeStreetIndex=null,lastStreetFlush=0;
@@ -353,12 +347,48 @@ async function exportStreetWorkExcel(){
 }
 window.addEventListener('online',()=>flushStreetWorkQueue(true));setInterval(()=>flushStreetWorkQueue(),20000);
 
+function majorCoveragePath(best,rawDistance,allowed){
+ const a=majorTracking.lastSnap,b=best.point;if(!a)return [];
+ if(!Number.isFinite(rawDistance)||rawDistance>100||d(a,b)>rawDistance+allowed*2)return [];
+ const lane=majorTracking.lanes[best.laneIndex];let points=[a,b];
+ if(majorTracking.lastLane===best.laneIndex&&lane?.coords?.length){
+  const previous=nearestMajorPointOnLane(a,best.laneIndex),from=previous?.segmentIndex,to=best.segmentIndex;
+  if(Number.isInteger(from)&&Number.isInteger(to)){
+   const middle=from<=to?lane.coords.slice(from+1,to+1):lane.coords.slice(to+1,from+1).reverse();
+   const curved=[a,...middle,b],length=curved.slice(1).reduce((sum,p,i)=>sum+d(curved[i],p),0);
+   if(length<=rawDistance*1.8+12)points=curved;
+  }
+ }else{
+  // Connect adjoining street fragments through their shared junction when available.
+  const previousLane=majorTracking.lanes[majorTracking.lastLane];
+  const previous=nearestMajorPointOnLane(a,majorTracking.lastLane);
+  if(previousLane?.coords?.length&&lane?.coords?.length&&previous){
+   const tail=[a,...previousLane.coords.slice(previous.segmentIndex+1)],head=[...lane.coords.slice(0,best.segmentIndex+1),b];
+   const joined=[...tail,...head],length=joined.slice(1).reduce((sum,p,i)=>sum+d(joined[i],p),0);
+   if(d(tail.at(-1),head[0])<=12&&length<=rawDistance*1.8+12)points=joined;
+  }
+ }
+ // Never bridge an off-route shortcut, paused travel, or a lost GPS position.
+ for(let i=1;i<points.length;i++){
+  const steps=Math.max(1,Math.ceil(d(points[i-1],points[i])/4));
+  for(let n=1;n<steps;n++){
+   const t=n/steps,p=points[i-1].map((v,k)=>v+(points[i][k]-v)*t),near=nearestMajorLanePoint(p);
+   if(!near||near.dist>allowed)return [];
+  }
+ }
+ return points
+}
 function markMajorPassed(ll,accuracy){
- if(currentMode!=='major'||!mapState.active||mapState.paused||majorNav.mode==='loading'||!majorTracking.lanes.length||accuracy>35)return false;
- const moveHeading=majorTracking.lastRaw&&d(majorTracking.lastRaw,ll)>=3?headingDeg(majorTracking.lastRaw,ll):null,best=trackedMajorLanePoint(ll,moveHeading,accuracy);majorTracking.lastRaw=ll;
- const allowed=Math.max(14,Math.min(28,accuracy+6));if(!best||best.stabilizing||best.dist>allowed){majorTracking.lastSnap=null;majorTracking.lastLane=null;$('majorRouteInfo').textContent=best?.stabilizing?'GPS in verifica • traccia verde momentaneamente sospesa':'⚪ Fuori percorso • spostamento NON segnato come passato';return false}
- if(majorTracking.lastSnap&&majorTracking.lastLane===best.laneIndex){const jump=d(majorTracking.lastSnap,best.point);if(jump>=1&&jump<=80){const a=majorTracking.lastSnap,b=best.point;L.polyline([a,b],{pane:'majorCoveragePane',color:'#20bd62',weight:7,opacity:1,lineCap:'round',interactive:false}).addTo(majorCoverageLayer);majorTracking.coveredMeters+=jump;recordStreetDistance(best.streetIndex,jump);majorCoverageSegments.push([majorRi,+a[0].toFixed(6),+a[1].toFixed(6),+b[0].toFixed(6),+b[1].toFixed(6)]);saveMajorWorkSession()}}
- majorTracking.lastSnap=best.point;majorTracking.lastLane=best.laneIndex;
+ if(currentMode!=='major'||!mapState.active||mapState.paused||majorNav.mode==='loading'||!majorTracking.lanes.length||!Number.isFinite(accuracy)||accuracy>35)return false;
+ const previousRaw=majorTracking.lastRaw,moveHeading=majorMovementHeading(ll),best=trackedMajorLanePoint(ll,moveHeading,accuracy);majorTracking.lastRaw=ll;
+ const allowed=majorAllowedDistance(accuracy);if(!best||best.dist>allowed){resetTrackingJoin();$('majorRouteInfo').textContent='⚪ Fuori percorso • spostamento NON segnato come passato';return false}
+ const points=majorCoveragePath(best,previousRaw?d(previousRaw,ll):Infinity,allowed);let added=false;
+ for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i],meters=d(a,b);if(meters<.1)continue;
+  L.polyline([a,b],{pane:'majorCoveragePane',color:'#20bd62',weight:7,opacity:1,lineCap:'round',interactive:false}).addTo(majorCoverageLayer);
+  majorTracking.coveredMeters+=meters;recordStreetDistance(best.streetIndex,meters);majorCoverageSegments.push([majorRi,+a[0].toFixed(6),+a[1].toFixed(6),+b[0].toFixed(6),+b[1].toFixed(6)]);added=true;
+ }
+ majorTracking.lastSnap=best.point;majorTracking.lastLane=best.laneIndex;if(added)saveMajorWorkSession();
  switchStreetWork(best.streetIndex);const street=majorRoutes[majorRi]?.streets?.[best.streetIndex];$('majorRouteInfo').textContent='🧭 SUL PERCORSO • '+(street?.name||'tratto')+' • passato evidenziato in verde';
  return true
 }
