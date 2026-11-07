@@ -53,7 +53,7 @@ scope.window.VargaSnowDiary.open();
 let data=scope.window.VargaSnowDiary.snapshot();
 assert.equal(data.route,'Percorso Rosso');
 assert.equal(data.km,0.35);
-const overlay=nodes.get('snowDiary');
+const overlay=nodes.get('snowApp').children[0];
 assert.equal(overlay.hidden,false);
 overlay.services[0].checked=true;overlay.services[1].checked=true;
 nodes.get('snowDiarySaveServices').click();
