@@ -1,0 +1,29 @@
+name: Verifica diario operativo neve
+on:
+  push:
+    branches:
+      - feature/diario-operativo-neve
+  pull_request:
+    paths:
+      - 'snow-diary.js'
+      - 'snow-diary.css'
+      - 'app.js'
+      - 'index.html'
+      - 'sw.js'
+      - 'tests/snow-diary.cjs'
+      - '.github/workflows/test-diario-neve.yml'
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Controllo sintassi
+        run: |
+          node --check snow-diary.js
+          node --check app.js
+          node --check sw.js
+      - name: Test diario operativo
+        run: node tests/snow-diary.cjs
