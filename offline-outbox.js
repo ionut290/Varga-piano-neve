@@ -82,7 +82,7 @@
         // Never timeout a write and immediately retry it: the remote write may still be in flight.
         if(activeUid!==owner)throw new Error('Account cambiato durante la sincronizzazione');
         await sender(entry.recordId,entry.payload);
-        await removeIfUnchanged(entry.id,entry.payload);
+        await removeIfUnchanged(entry.recordId,entry.payload);
       }
       return (await entries()).length;
     })().finally(()=>{flushing=null;});
