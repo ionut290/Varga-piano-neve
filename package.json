@@ -1,0 +1,12 @@
+{
+  "name": "varga-piano-neve",
+  "private": true,
+  "version": "74.0.0-dev",
+  "scripts": {
+    "test": "node --test tests/*.test.cjs",
+    "check": "node --check app.js && node --check snow-auth.js && node --check offline-outbox.js && node --check sw.js && node --check major-offline-nav.js"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.0.0"
+  }
+}
