@@ -1,0 +1,26 @@
+name: Piano Neve Phase 1 checks
+on:
+  push:
+    branches:
+      - develop/piano-neve-2-fase1
+  pull_request:
+    paths:
+      - 'app.js'
+      - 'snow-auth.js'
+      - 'offline-outbox.js'
+      - 'sw.js'
+      - 'tests/**'
+      - 'package.json'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm run check
+      - run: npm test
