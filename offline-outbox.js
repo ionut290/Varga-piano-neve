@@ -5,14 +5,14 @@
 (function (root) {
   'use strict';
   const DB_NAME = 'varga-piano-neve-operations';
-  const STORE = 'outbox';
+  const STORE = 'outbox', SESSIONS='sessions';
   const DB_VERSION = 1;
   let dbPromise, chain = Promise.resolve(), flushing = null;
   function database() {
     if (!root.indexedDB) return Promise.reject(new Error('IndexedDB non disponibile'));
     if (!dbPromise) dbPromise = new Promise((resolve, reject) => {
       const req = root.indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = () => { const db = req.result; if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, {keyPath:'id'}); };
+      req.onupgradeneeded = () => { const db = req.result; if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, {keyPath:'id'}); if(!db.objectStoreNames.contains(SESSIONS))db.createObjectStore(SESSIONS,{keyPath:'id'}); };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error || new Error('Errore IndexedDB'));
     }).catch(error => { dbPromise = null; throw error; });
@@ -83,7 +83,31 @@
     return flushing;
   }
   async function count() { return (await entries()).length; }
-  const api={enqueue,flush,count,ready:database};
+  function saveSession(payload) {
+    const snapshot=JSON.parse(JSON.stringify(payload));
+    return new Promise(async (resolve,reject)=>{
+      try{
+       const db=await database(), tx=db.transaction(SESSIONS,'readwrite');
+       tx.objectStore(SESSIONS).put({id:'active',payload:snapshot});
+       tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+      }catch(e){reject(e)}
+    });
+  }
+  async function loadSession(){
+    const db=await database();
+    return new Promise((resolve,reject)=>{
+      const req=db.transaction(SESSIONS,'readonly').objectStore(SESSIONS).get('active');
+      req.onsuccess=()=>resolve(req.result?.payload||null);req.onerror=()=>reject(req.error);
+    });
+  }
+  async function clearSession(){
+    const db=await database();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(SESSIONS,'readwrite');
+      tx.objectStore(SESSIONS).delete('active');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+    });
+  }
+  const api={enqueue,flush,count,ready:database,saveSession,loadSession,clearSession};
   root.VargaSnowOutbox=api;
   if(typeof module!=='undefined'&&module.exports) module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
