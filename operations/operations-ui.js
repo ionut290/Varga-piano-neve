@@ -82,6 +82,8 @@
  function open(){panel.hidden=false;if(!map){map=L.map('snowOpsMap',{zoomControl:true}).setView([44.574,11.366],12);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map)}setTimeout(()=>{map.invalidateSize();updateMap()},50)}
  function close(){panel.hidden=true}
  button.onclick=open;$('opsClose').onclick=close;
+ // Freshness changes with time even when the server emits no new events.
+ setInterval(()=>{if(!panel.hidden)updateMap()},30000);
  async function formSubmit(fn,form){try{message('Salvataggio…');await fn(new FormData(form));form.reset();message('Salvato')}catch(e){message('Errore: '+e.message)}}
  $('opsVehicleForm').onsubmit=e=>{e.preventDefault();formSubmit(async d=>api.upsertVehicle(d.get('vehicleId'),{name:d.get('name'),plate:d.get('plate')}),e.currentTarget)};
  $('opsTeamForm').onsubmit=e=>{e.preventDefault();formSubmit(async d=>api.upsertTeam(d.get('teamId'),{name:d.get('name'),operatorUid:d.get('operatorUid')}),e.currentTarget)};
