@@ -3,7 +3,7 @@
   "private": true,
   "version": "74.0.0-dev",
   "scripts": {
-    "test": "node --test tests/*.test.cjs",
+    "test": "node --test tests/offline-outbox.test.cjs",
     "check": "node --check app.js && node --check snow-auth.js && node --check offline-outbox.js && node --check sw.js && node --check major-offline-nav.js",
     "test:firestore": "firebase emulators:exec --config tests/firebase.emulator.json --project demo-varga-neve-phase1 --only firestore \"node --test tests/firestore-rules.test.cjs\""
   },
