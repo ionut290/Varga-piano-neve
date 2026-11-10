@@ -1,8 +1,9 @@
-name: Piano Neve Phase 1 checks
+name: Piano Neve Phase 1 and 2 checks
 on:
   push:
     branches:
       - develop/piano-neve-2-fase1
+      - develop/piano-neve-2-operations
   pull_request:
     paths:
       - 'app.js'
@@ -13,6 +14,8 @@ on:
       - 'package.json'
       - 'tests/firebase.emulator.json'
       - 'tests/firestore.phase1.rules'
+      - 'operations/**'
+      - 'index.html'
 jobs:
   test:
     runs-on: ubuntu-latest

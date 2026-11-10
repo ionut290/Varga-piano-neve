@@ -2,7 +2,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const {initializeTestEnvironment,assertSucceeds,assertFails}=require('@firebase/rules-unit-testing');
-const {doc,setDoc,getDoc,deleteDoc,getDocs,collection}=require('firebase/firestore');
+const {doc,setDoc,getDoc,deleteDoc,getDocs,collection,query,where,serverTimestamp}=require('firebase/firestore');
 const port=Number(process.env.FIRESTORE_EMULATOR_PORT||8085);
 let env;
 function client(uid,email){
@@ -61,4 +61,46 @@ test('Firestore emulator roles and ownership',async t=>{
   await assertFails(setDoc(doc(pending,'pianoNeveStreetWork/bad2'),{uid:'pending',userEmail:'pending@example.test',recordId:'bad2'}));
   await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(),'pianoNeveRouteEdits/edit2')));
  });
+
+ await t.test('Phase 2 fleet and team writes require administrator',async()=>{
+  const truck={name:'Spargisale 1',plate:'TEST',active:true,updatedBy:'admin1'};
+  const team={name:'Squadra 1',operatorUid:'op1',active:true,updatedBy:'admin1'};
+  await assertSucceeds(setDoc(doc(admin,'pianoNeveVehicles/truck-01'),truck));
+  await assertSucceeds(setDoc(doc(admin,'pianoNeveTeams/team-01'),team));
+  await assertFails(setDoc(doc(a,'pianoNeveVehicles/truck-02'),{...truck,updatedBy:'op1'}));
+  await assertFails(getDocs(collection(a,'pianoNeveTeams')));
+  await assertSucceeds(getDocs(collection(admin,'pianoNeveVehicles')));
+ });
+ await t.test('Phase 2 exclusive route assignment is visible only to its operator',async()=>{
+  const assignment={routeId:'major:0',operatorUid:'op1',teamId:'team-01',vehicleId:'truck-01',createdBy:'admin1',status:'active'};
+  await assertSucceeds(setDoc(doc(admin,'pianoNeveAssignments/major_0'),assignment));
+  await assertFails(setDoc(doc(a,'pianoNeveAssignments/major_1'),{...assignment,routeId:'major:1',createdBy:'op1'}));
+  await assertFails(setDoc(doc(admin,'pianoNeveAssignments/major_1'),{...assignment,routeId:'major:0'}));
+  await assertSucceeds(getDoc(doc(a,'pianoNeveAssignments/major_0')));
+  await assertFails(getDoc(doc(b,'pianoNeveAssignments/major_0')));
+  await assertSucceeds(getDocs(query(collection(a,'pianoNeveAssignments'),where('operatorUid','==','op1'))));
+  await assertFails(getDocs(collection(a,'pianoNeveAssignments')));
+ });
+ await t.test('minor route GPS is only writable by its assigned operator',async()=>{
+  const minor={routeId:'minor:2',operatorUid:'op2',teamId:'crew-02',vehicleId:'truck-02',createdBy:'admin1',status:'active'};
+  await assertSucceeds(setDoc(doc(admin,'pianoNeveAssignments/minor_2'),minor));
+  const point={uid:'op2',routeId:'minor:2',routeKey:'minor_2',teamId:'crew-02',vehicleId:'truck-02',lat:44.58,lng:11.36,accuracy:9,updatedAt:serverTimestamp()};
+  await assertSucceeds(setDoc(doc(b,'pianoNeveLivePositions/op2'),point));
+  await assertFails(setDoc(doc(a,'pianoNeveLivePositions/op1'),{...point,uid:'op1'}));
+  await assertFails(setDoc(doc(b,'pianoNeveLivePositions/op2'),{...point,routeId:'major:2'}));
+  await assertSucceeds(deleteDoc(doc(b,'pianoNeveLivePositions/op2')));
+ });
+ await t.test('Phase 2 live position restricted to active assigned operator',async()=>{
+  const gps={uid:'op1',routeId:'major:0',routeKey:'major_0',teamId:'team-01',vehicleId:'truck-01',lat:44.57,lng:11.36,accuracy:10,updatedAt:serverTimestamp()};
+  await assertSucceeds(setDoc(doc(a,'pianoNeveLivePositions/op1'),gps));
+  await assertFails(setDoc(doc(b,'pianoNeveLivePositions/op1'),{...gps,uid:'op2'}));
+  await assertFails(setDoc(doc(a,'pianoNeveLivePositions/op1'),{...gps,lat:100}));
+  await assertFails(getDocs(collection(a,'pianoNeveLivePositions')));
+  await assertSucceeds(getDocs(collection(admin,'pianoNeveLivePositions')));
+  await assertSucceeds(setDoc(doc(admin,'pianoNeveAssignments/major_0'),{routeId:'major:0',operatorUid:'op1',teamId:'team-01',vehicleId:'truck-01',createdBy:'admin1',status:'released',releasedBy:'admin1'}));
+  await assertFails(setDoc(doc(a,'pianoNeveLivePositions/op1'),gps));
+  await assertSucceeds(deleteDoc(doc(a,'pianoNeveLivePositions/op1')));
+  await assertSucceeds(setDoc(doc(admin,'pianoNeveAssignments/major_0'),{routeId:'major:0',operatorUid:'op2',teamId:'team-01',vehicleId:'truck-01',createdBy:'admin1',status:'active'}));
+ });
+
 });
