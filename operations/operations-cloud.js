@@ -39,11 +39,8 @@
     // Read all route slots before any write, so parallel assignments conflict and retry.
     const slotRefs=core.ROUTES.map(route=>activeAssignment(route.id));
     const slots=await Promise.all(slotRefs.map(slot=>tx.get(slot)));
-    const used=slots.find(s=>s.exists&&s.data().status==='active'&&(
-      s.data().routeId===routeId||s.data().vehicleId===vehicleId||
-      s.data().operatorUid===operatorUid||s.data().teamId===teamId
-    ));
-    if(used)throw new Error('Percorso, mezzo o squadra già impegnati in un altro giro.');
+    if(core.assignmentConflict(slots.filter(s=>s.exists).map(s=>s.data()),payload))
+      throw new Error('Percorso, mezzo o squadra già impegnati in un altro giro.');
     tx.set(ref,{...payload,routeId,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
    });
   },
