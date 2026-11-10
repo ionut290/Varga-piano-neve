@@ -16,7 +16,7 @@ window.addEventListener('resize',repairMapSize);window.addEventListener('orienta
 if(window.ResizeObserver)new ResizeObserver(repairMapSize).observe(document.getElementById('map'));
 const rebuiltNames=window.ROUTE_INSTRUCTIONS?.names||[];const rebuiltNotes=window.ROUTE_INSTRUCTIONS?.notes||[];const routes=rebuiltNotes.map((notes,rix)=>({name:rebuiltNames[rix]||('Percorso '+(rix+1)),segments:notes.map((name,i)=>({name,coords:window.REBUILT_MINOR_ROUTES?.[rix]?.[i]?.coords||[]})),points:notes}));
 const majorRoutes=window.MAJOR_ROUTES||[];
-const APP_BUILD='73';const SW_BUILD='73';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
+const APP_BUILD='74-dev';const SW_BUILD='74-dev';const savedMajorRoute=localStorage.getItem('majorSelectedRoute');
 let ri=0,pi=0,majorRi=savedMajorRoute!==null&&Number.isInteger(+savedMajorRoute)&&+savedMajorRoute>=0&&+savedMajorRoute<majorRoutes.length?+savedMajorRoute:0,majorPi=0,currentMode="major",minorMapOpened=false;
 const done=new Set(JSON.parse(localStorage.getItem('snowDone')||'[]')),skipped=new Set(JSON.parse(localStorage.getItem('snowSkipped')||'[]')),majorDone=new Set(JSON.parse(localStorage.getItem('majorDone')||'[]')),routeLayer=L.layerGroup().addTo(map),allRoutesLayer=L.layerGroup().addTo(map),geoCache={};let navTarget=null,navLine=null,navRoute=null,majorGuideLine=null,majorPauseMarker=null,majorVehicleMarker=null;const majorNav={mode:'idle',target:null,pausePoint:null,resumeMode:null,resumeTarget:null,path:[],maneuvers:[],pathIndex:0,lastVoiceKey:'',lastInsideStreet:null,lastRerouteAt:0,rerouting:false};
 async function roadRoute(a,b){try{const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson&steps=true';const j=await fetch(u).then(r=>r.json());if(j.routes&&j.routes[0])return j.routes[0]}catch(e){}return null}
@@ -313,6 +313,11 @@ async function prepareMajorTrackingRoute(){
 function resetTrackingJoin(){majorTracking.lastRaw=null;majorTracking.lastSnap=null;majorTracking.lastLane=null;majorTracking.lockedLane=null;majorTracking.lockedStreet=null;majorTracking.candidateLane=null;majorTracking.candidateHits=0;majorTracking.offRouteSince=0;majorTracking.headingRaw=null;majorTracking.moveHeading=null}
 
 const STREET_PENDING_KEY='snowStreetWorkPendingV2';
+function snowUserStorageKey(key){
+ const uid=window.VargaSnowCloud?.user?.uid;
+ return uid?key+'::'+uid:null;
+}
+let streetWriteChain=Promise.resolve(),streetFlushPromise=null,streetCloudError=null;
 let streetWorkTourId='',streetWorkState={},activeStreetIndex=null,lastStreetFlush=0;
 function newStreetTourId(){return 'tour-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)}
 function beginStreetWorkTour(){if(!streetWorkTourId)streetWorkTourId=newStreetTourId();if(!streetWorkState||typeof streetWorkState!=='object')streetWorkState={}}
@@ -322,15 +327,43 @@ function streetRecord(index){
  const key=String(index);if(!streetWorkState[key])streetWorkState[key]={recordId:streetWorkTourId+'-'+majorRi+'-'+index,tourId:streetWorkTourId,routeIndex:majorRi,routeCode:route.code||'',routeName:route.name||('Percorso '+(majorRi+1)),streetIndex:index,streetName:street.name,startAtClient:new Date().toISOString(),endAtClient:null,coveredMeters:0,totalMeters:streetTotalMeters(index),completionPercent:0,pauseEvents:[],status:'in_corso',lastActivityAtClient:new Date().toISOString()};
  return streetWorkState[key]
 }
-function readStreetPending(){try{return JSON.parse(localStorage.getItem(STREET_PENDING_KEY)||'{}')}catch(e){return{}}}
-function writeStreetPending(data){try{localStorage.setItem(STREET_PENDING_KEY,JSON.stringify(data))}catch(e){console.warn('Street queue save',e)}}
+function readStreetPending(){try{const key=snowUserStorageKey(STREET_PENDING_KEY);return key?JSON.parse(localStorage.getItem(key)||'{}'):{} }catch(e){return{}}}
+function writeStreetPending(data){try{const key=snowUserStorageKey(STREET_PENDING_KEY);if(!key)throw new Error('Non autenticato');localStorage.setItem(key,JSON.stringify(data))}catch(e){console.warn('Street queue save',e);throw e}}
 function queueStreetRecord(record){
- if(!record)return;record.lastActivityAtClient=new Date().toISOString();const pending=readStreetPending();pending[record.recordId]=JSON.parse(JSON.stringify(record));writeStreetPending(pending);saveMajorWorkSession();
+ if(!record)return Promise.resolve();
+ record.lastActivityAtClient=new Date().toISOString();
+ const id=record.recordId, snapshot=JSON.parse(JSON.stringify(record));
+ // Emergency journal: kept until IndexedDB has durably committed.
+ const pending=readStreetPending();pending[id]=snapshot;writeStreetPending(pending);
+ streetWriteChain=streetWriteChain.catch(()=>{}).then(async()=>{
+  if(!window.VargaSnowOutbox)throw new Error('Archivio offline non inizializzato');
+  await window.VargaSnowOutbox.enqueue(id,snapshot);
+  const latest=readStreetPending();
+  if(JSON.stringify(latest[id])===JSON.stringify(snapshot)){delete latest[id];writeStreetPending(latest)}
+ }).catch(e=>{streetCloudError=e;console.error('Salvataggio offline non riuscito',e);$('gps').textContent='⚠ Registro non salvato: non chiudere l’app'});
+ saveMajorWorkSession();
+ return streetWriteChain;
 }
 async function flushStreetWorkQueue(force=false){
- const now=Date.now();if(!force&&now-lastStreetFlush<15000)return;lastStreetFlush=now;
- const cloud=window.VargaSnowCloud;if(!cloud?.user||!cloud?.saveStreetProgress)return;
- const pending=readStreetPending();for(const [id,payload] of Object.entries(pending)){try{await Promise.race([cloud.saveStreetProgress(id,payload),new Promise((_,reject)=>setTimeout(()=>reject(new Error('sync timeout')),5000))]);delete pending[id];writeStreetPending(pending)}catch(e){console.warn('Registro strada in attesa di connessione',e);break}}
+ if(streetFlushPromise)return streetFlushPromise;
+ const now=Date.now();if(!force&&now-lastStreetFlush<15000)return false;
+ lastStreetFlush=now;
+ streetFlushPromise=(async()=>{
+  await streetWriteChain;
+  if(Object.keys(readStreetPending()).length){
+   const pending=readStreetPending();
+   for(const [id,payload] of Object.entries(pending)){
+    await window.VargaSnowOutbox.enqueue(id,payload);
+    const latest=readStreetPending();
+    if(JSON.stringify(latest[id])===JSON.stringify(payload)){delete latest[id];writeStreetPending(latest)}
+   }
+  }
+  const cloud=window.VargaSnowCloud;
+  if(!cloud?.user||!cloud?.saveStreetProgress||!navigator.onLine)return false;
+  const left=await window.VargaSnowOutbox.flush((id,payload)=>cloud.saveStreetProgress(id,payload));
+  streetCloudError=null;return left===0&&Object.keys(readStreetPending()).length===0;
+ })().catch(e=>{streetCloudError=e;console.warn('Registro in attesa di sincronizzazione',e);return false}).finally(()=>{streetFlushPromise=null});
+ return streetFlushPromise;
 }
 function switchStreetWork(index){
  if(!Number.isInteger(index)||index<0)return;if(index===activeStreetIndex)return;
@@ -423,23 +456,27 @@ function initMajorVoiceButton(){const b=$('majorVoiceBtn');if(!b)return;const re
 const saltEstimate={loadedKg:0,setting:0};const SALT_KG_PER_KM_PER_SETTING=8.8;const mapState={active:false,paused:false,last:null,current:null,pts:[],meters:0,mark:null,watch:null};const line=L.polyline([],{color:'#78909c',weight:4,opacity:.35}).addTo(map),$=id=>document.getElementById(id);function d(a,b){const R=6371000,p=Math.PI/180,x=(b[0]-a[0])*p,y=(b[1]-a[1])*p,q=Math.sin(x/2)**2+Math.cos(a[0]*p)*Math.cos(b[0]*p)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
 function currentSaltEstimate(){const loadedKg=Number(saltEstimate.loadedKg)||0,setting=Number(saltEstimate.setting)||0;if(loadedKg<=0||setting<=0)return null;const spreadKg=Math.min(loadedKg,(mapState.meters/1000)*SALT_KG_PER_KM_PER_SETTING*setting);const remainingKg=Math.max(0,loadedKg-spreadKg);return{loadedKg,setting,spreadKg,remainingKg,percent:Math.max(0,Math.min(100,Math.round(remainingKg/loadedKg*100))),rateKgKm:SALT_KG_PER_KM_PER_SETTING*setting}}
 function renderSaltEstimate(){const el=$('saltEstimate');if(!el)return;const estimate=currentSaltEstimate();el.hidden=!estimate;if(!estimate)return;el.classList.toggle('lowSalt',estimate.percent<20);$('saltEstimateText').textContent='SALE STIMATO · '+estimate.percent+'% · ~'+estimate.remainingKg.toFixed(0)+' kg rimasti'}
-function readMajorWorkSession(){try{return JSON.parse(localStorage.getItem(MAJOR_SESSION_KEY)||'null')}catch(e){return null}}
+let sessionBackupChain=Promise.resolve(),lastCloudSessionSave=0;
+function readMajorWorkSession(){try{const key=snowUserStorageKey(MAJOR_SESSION_KEY);return key?JSON.parse(localStorage.getItem(key)||'null'):null}catch(e){return null}}
+async function recoverOfflineSession(){
+ try{return await window.VargaSnowOutbox?.loadSession?.()}catch(e){console.warn('Backup offline non disponibile',e);return null}
+}
 function saveMajorWorkSession(force=false){
  if(!mapState.active||currentMode!=='major')return;
- const now=Date.now();lastMajorSessionSave=now;
+ const now=Date.now();const saveCloud=force||now-lastCloudSessionSave>=10000;lastMajorSessionSave=now;
  const pts=mapState.pts.map(p=>[+p[0].toFixed(6),+p[1].toFixed(6)]);
  const payload={v:2,mode:'major',routeIndex:majorRi,pointIndex:majorPi,active:true,paused:!!mapState.paused,meters:+mapState.meters.toFixed(1),pts,coverage:majorCoverageSegments,tourId:streetWorkTourId,streetWork:streetWorkState,activeStreetIndex,pausePoint:majorNav.pausePoint,navMode:majorNav.mode,resumeMode:majorNav.resumeMode,resumeTarget:majorNav.resumeTarget,current:mapState.current,saltLoadKg:Number(saltEstimate.loadedKg)||0,saltSetting:Number(saltEstimate.setting)||0,updatedAt:now};
- try{localStorage.setItem(MAJOR_SESSION_KEY,JSON.stringify(payload));window.VargaSnowCloud?.saveSession(payload).catch(e=>console.warn('Cloud session save failed',e))}catch(e){lastMajorSessionSave=0;$('gps').textContent='⚠ Salvataggio non riuscito: non chiudere l’app';console.warn('Session save failed',e);return false}return true
+ try{localStorage.setItem(snowUserStorageKey(MAJOR_SESSION_KEY),JSON.stringify(payload));sessionBackupChain=sessionBackupChain.catch(()=>{}).then(()=>window.VargaSnowOutbox?.saveSession?.(payload));sessionBackupChain.catch(e=>{$('gps').textContent='⚠ Backup offline non disponibile';console.error(e)});if(saveCloud){lastCloudSessionSave=now;window.VargaSnowCloud?.saveSession(payload).catch(e=>{$('gps').textContent='⚠ Sincronizzazione cloud non riuscita';console.warn('Cloud session save failed',e)})}}catch(e){lastMajorSessionSave=0;$('gps').textContent='⚠ Salvataggio non riuscito: non chiudere l’app';console.warn('Session save failed',e);return false}return true
 }
 function clearMajorWorkSession(){
- localStorage.removeItem(MAJOR_SESSION_KEY);streetWorkTourId='';streetWorkState={};activeStreetIndex=null;saltEstimate.loadedKg=0;saltEstimate.setting=0;renderSaltEstimate();window.VargaSnowCloud?.clearSession().catch(e=>console.warn('Cloud session clear failed',e));majorCoverageSegments=[];majorCoverageLayer.clearLayers();majorTracking.coveredMeters=0;mapState.meters=0;mapState.pts=[];mapState.last=null;line.setLatLngs([])
+ localStorage.removeItem(snowUserStorageKey(MAJOR_SESSION_KEY));streetWorkTourId='';streetWorkState={};activeStreetIndex=null;saltEstimate.loadedKg=0;saltEstimate.setting=0;renderSaltEstimate();majorCoverageSegments=[];majorCoverageLayer.clearLayers();majorTracking.coveredMeters=0;mapState.meters=0;mapState.pts=[];mapState.last=null;line.setLatLngs([])
 }
 function drawSavedMajorCoverage(){
  majorCoverageLayer.clearLayers();
  for(const s of majorCoverageSegments){if(!Array.isArray(s)||s.length<5||s[0]!==majorRi)continue;L.polyline([[s[1],s[2]],[s[3],s[4]]],{pane:'majorCoveragePane',color:'#20bd62',weight:7,opacity:1,lineCap:'round',interactive:false}).addTo(majorCoverageLayer)}
 }
 async function restoreMajorWorkSession(){
- let s=readMajorWorkSession();try{const cloud=await window.VargaSnowCloud?.loadSession?.();if(cloud?.active&&cloud.mode==='major'&&(!s||Number(cloud.updatedAt?.toMillis?.()||cloud.updatedAt||0)>Number(s.updatedAt||0))){s=cloud;try{localStorage.setItem(MAJOR_SESSION_KEY,JSON.stringify(Object.assign({},cloud,{updatedAt:Date.now()})))}catch(_){}}}catch(e){console.warn('Cloud session restore failed',e)}if(!s?.active||s.mode!=='major'||s.routeIndex!==majorRi)return false;
+ let s=readMajorWorkSession();const offline=await recoverOfflineSession();if(offline?.active&&(!s||Number(offline.updatedAt||0)>Number(s.updatedAt||0)))s=offline;try{const cloud=await window.VargaSnowCloud?.loadSession?.();if(cloud?.active&&cloud.mode==='major'&&(!s||Number(cloud.updatedAt?.toMillis?.()||cloud.updatedAt||0)>Number(s.updatedAt||0))){s=cloud;try{localStorage.setItem(snowUserStorageKey(MAJOR_SESSION_KEY),JSON.stringify(Object.assign({},cloud,{updatedAt:Date.now()})))}catch(_){}}}catch(e){console.warn('Cloud session restore failed',e)}if(!s?.active||s.mode!=='major'||s.routeIndex!==majorRi)return false;
  mapState.active=true;mapState.paused=!!s.paused;mapState.meters=Number(s.meters)||0;saltEstimate.loadedKg=Number(s.saltLoadKg)||0;saltEstimate.setting=Number(s.saltSetting)||0;mapState.pts=Array.isArray(s.pts)?s.pts:[];mapState.last=null;mapState.current=Array.isArray(s.current)?s.current:null;line.setLatLngs(mapState.pts);
  majorPi=Number.isInteger(s.pointIndex)&&s.pointIndex>=0&&s.pointIndex<(majorRoutes[majorRi]?.streets?.length||0)?s.pointIndex:0;
  majorCoverageSegments=Array.isArray(s.coverage)?s.coverage:[];streetWorkTourId=s.tourId||newStreetTourId();streetWorkState=s.streetWork&&typeof s.streetWork==='object'?s.streetWork:{};activeStreetIndex=Number.isInteger(s.activeStreetIndex)?s.activeStreetIndex:null;drawSavedMajorCoverage();
@@ -482,20 +519,21 @@ async function resumeMajorWork(){
 }
 $('resume').onclick=resumeMajorWork;
 $('return').onclick=async()=>{if(currentMode==='major'&&majorNav.pausePoint){const pos=await currentGpsOnce();if(pos)await navigateMajorTo(pos.ll,majorNav.pausePoint,'to-pause','RITORNO AL PUNTO DI PAUSA');return}if(mapState.pts.length){const p=mapState.pts.at(-1);window.open('https://www.google.com/maps/dir/?api=1&destination='+p[0]+','+p[1],'_blank')}};
-$('stop').onclick=()=>{closeStreetWork();setMajorMore(false);mapState.active=false;mapState.paused=false;mapState.last=null;majorNav.mode='idle';majorNav.target=null;majorNav.pausePoint=null;majorNav.resumeMode=null;majorNav.resumeTarget=null;resetTrackingJoin();clearMajorNavLine();clearMajorGuide();window.MajorOfflineNav?.resetSpeech?.();setMajorNavHud(false);if(majorVehicleMarker){map.removeLayer(majorVehicleMarker);majorVehicleMarker=null}if(majorPauseMarker){routeLayer.removeLayer(majorPauseMarker);majorPauseMarker=null}clearMajorWorkSession();majorDone.clear();localStorage.removeItem('majorDone');$('start').disabled=false;$('pause').disabled=true;$('pause').hidden=false;$('resume').hidden=true;$('return').hidden=true;$('stop').disabled=true;ui()};if($('adminArchiveTour'))$('adminArchiveTour').onclick=async()=>{
+async function stopMajorWork(){if(!mapState.active)return;const stopButton=$('stop');stopButton.disabled=true;closeStreetWork();const synced=await flushStreetWorkQueue(true);if(!synced){alert('I dati del giro non sono ancora sincronizzati. Il lavoro rimane attivo e salvato sul dispositivo. Riconnettiti e riprova.');stopButton.disabled=false;return}try{await sessionBackupChain;await window.VargaSnowCloud?.clearSession?.();await window.VargaSnowOutbox?.clearSession?.()}catch(e){alert('Impossibile confermare la chiusura sul server. Il giro resta disponibile.');stopButton.disabled=false;return}setMajorMore(false);mapState.active=false;mapState.paused=false;mapState.last=null;majorNav.mode='idle';majorNav.target=null;majorNav.pausePoint=null;majorNav.resumeMode=null;majorNav.resumeTarget=null;resetTrackingJoin();clearMajorNavLine();clearMajorGuide();window.MajorOfflineNav?.resetSpeech?.();setMajorNavHud(false);if(majorVehicleMarker){map.removeLayer(majorVehicleMarker);majorVehicleMarker=null}if(majorPauseMarker){routeLayer.removeLayer(majorPauseMarker);majorPauseMarker=null}clearMajorWorkSession();majorDone.clear();localStorage.removeItem('majorDone');$('start').disabled=false;$('pause').disabled=true;$('pause').hidden=false;$('resume').hidden=true;$('return').hidden=true;$('stop').disabled=true;ui()} $('stop').onclick=stopMajorWork;if($('adminArchiveTour'))$('adminArchiveTour').onclick=async()=>{
  if(window.VargaSnowCloud?.role!=='admin')return;
  if(!mapState.active)return alert('Nessun giro attivo da archiviare.');
  if(!confirm('Archiviare e terminare questo giro? Il giro resterà nello storico amministratore.'))return;
  const b=$('adminArchiveTour');b.disabled=true;b.textContent='ARCHIVIAZIONE…';
  try{
   saveMajorWorkSession(true);
+  if(!await flushStreetWorkQueue(true))throw new Error('Registro strade non sincronizzato: archiviazione rinviata');
   const route=majorRoutes[majorRi]||{};
   await window.VargaSnowCloud.archiveTour({
-   v:1,type:'piano-neve',mode:'major',routeIndex:majorRi,routeCode:route.code||'',routeName:route.name||('Percorso '+(majorRi+1)),
+   v:1,type:'piano-neve',tourId:streetWorkTourId,mode:'major',routeIndex:majorRi,routeCode:route.code||'',routeName:route.name||('Percorso '+(majorRi+1)),
    pointIndex:majorPi,meters:+mapState.meters.toFixed(1),coverage:majorCoverageSegments,track:mapState.pts,
    completedStreets:[...majorDone],lastPosition:mapState.current||null,saltEstimate:currentSaltEstimate(),endedAtClient:new Date().toISOString()
   });
-  $('stop').click();alert('Giro archiviato e terminato.');
+  await stopMajorWork();if(mapState.active)throw new Error('Giro archiviato, ma la chiusura non è ancora confermata');alert('Giro archiviato e terminato.');
  }catch(e){console.error(e);alert('Impossibile archiviare il giro. Il lavoro attivo non è stato cancellato.');b.disabled=false;b.textContent='📦 ARCHIVIA E TERMINA GIRO'}
 };
 document.querySelectorAll('.tab').forEach(b=>b.onclick=async()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');const minor=b.dataset.mode==='minor';currentMode=minor?'minor':'major';drawAllRoutes();routeLayer.clearLayers();$('major').hidden=minor;$('minor').hidden=!minor;if(minor){setMajorNavHud(false);if(majorBoundaryLayer&&map.hasLayer(majorBoundaryLayer))map.removeLayer(majorBoundaryLayer);if(!minorMapOpened&&map.hasLayer(streetMap)){map.removeLayer(streetMap);regionalOrtho.addTo(map)}if(!map.hasLayer(officialFootways))officialFootways.addTo(map);if(!map.hasLayer(officialCycleways))officialCycleways.addTo(map);minorMapOpened=true;drawRoute()}else{if(map.hasLayer(officialFootways))map.removeLayer(officialFootways);if(map.hasLayer(officialCycleways))map.removeLayer(officialCycleways);if(!map.hasLayer(streetMap)){map.removeLayer(regionalOrtho);streetMap.addTo(map)}if(majorBoundaryLayer&&!map.hasLayer(majorBoundaryLayer))majorBoundaryLayer.addTo(map);renderMajor();await showMajorRoute();restoreMajorNavVisuals()}});$('majorDone').onclick=()=>{setMajorMore(false);const r=majorRoutes[majorRi];if(!r)return;majorDone.add(majorKey());localStorage.setItem('majorDone',JSON.stringify([...majorDone]));if(majorPi<r.streets.length-1)majorPi++;renderMajor()};$('minorStart').onclick=()=>{gps();$('navBanner').textContent='🟠 INTERVENTO IN CORSO';$('minorStart').textContent='● INTERVENTO ATTIVO';renderRoute()};$('minorDone').onclick=()=>{done.add(ri+'-'+pi);skipped.delete(ri+'-'+pi);localStorage.setItem('snowDone',JSON.stringify([...done]));localStorage.setItem('snowSkipped',JSON.stringify([...skipped]));if(pi<routes[ri].points.length-1)pi++;drawRoute();drawAllRoutes()};$('next').onclick=()=>{pi++;if(pi>=routes[ri].points.length){pi=0;ri=(ri+1)%routes.length}drawRoute(false);focusStop()};$('skip').onclick=()=>{const why=prompt('Motivo: strada chiusa, ostacolo, già pulita o altro?');if(!why)return;skipped.add(ri+'-'+pi);localStorage.setItem('snowSkipped',JSON.stringify([...skipped]));if(pi<routes[ri].points.length-1)pi++;drawRoute()};$('problem').onclick=()=>{const note=prompt('Descrivi il problema operativo:');if(note)alert('Segnalazione salvata sul dispositivo: '+note)};$('routePrev').onclick=()=>{ri=(ri+routes.length-1)%routes.length;pi=0;drawRoute()};$('routeNext').onclick=()=>{ri=(ri+1)%routes.length;pi=0;drawRoute()};$('navigate').onclick=async()=>{const s=routes[ri].segments[pi],p=surfaceStart(ri,pi);if(!p)return alert('Geometria nuova ancora in ricostruzione per questa tappa');gps();navigator.geolocation.getCurrentPosition(async pos=>{const here=[pos.coords.latitude,pos.coords.longitude];navTarget=p;setPositionFollow(true);syncScreenAwake();const rr=await roadRoute(here,p);if(navLine)routeLayer.removeLayer(navLine);if(rr){const pts=rr.geometry.coordinates.map(x=>[x[1],x[0]]);navLine=L.polyline(pts,{color:'#ff9800',weight:8,opacity:.95}).addTo(routeLayer);navRoute=rr;map.fitBounds(navLine.getBounds(),{padding:[35,35]});$('routeInfo').textContent='🧭 NAVIGAZIONE • '+fmtDist(rr.distance)+' • circa '+Math.max(1,Math.round(rr.duration/60))+' min'}else{$('routeInfo').textContent='Navigazione stradale non disponibile';map.setView(p,16)}L.circleMarker(p,{radius:15,color:'#fff',weight:4,fillColor:'#ff9800',fillOpacity:1}).addTo(routeLayer).bindPopup('DESTINAZIONE • '+s.name)},()=>alert('Attiva il GPS per iniziare la navigazione'),{enableHighAccuracy:true})};$('streetView').onclick=()=>{const p=surfaceStart(ri,pi);if(p)window.open('https://www.google.com/maps/@?api=1&map_action=pano&viewpoint='+p[0]+','+p[1],'_blank','noopener')};async function registerAppWorker(){if(!('serviceWorker'in navigator))return;let reloading=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloading)return;saveMajorWorkSession(true);reloading=true;location.reload()});try{const reg=await navigator.serviceWorker.register('./sw.js?v='+SW_BUILD,{scope:'./',updateViaCache:'none'});await reg.update();if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'})}catch(e){console.warn('Service worker update failed',e)}}
