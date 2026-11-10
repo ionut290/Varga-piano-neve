@@ -21,6 +21,13 @@ Per una successiva pubblicazione, l'amministratore deve:
 5. Definire informativa ai dipendenti, finalità e tempi di conservazione, accesso alle posizioni solo per autorizzati e cancellazione programmata dei punti non più necessari.
 6. Confermare che il primo admin può creare anagrafiche e assegnazioni in staging e che nessuna regola sulle altre app è stata compromessa.
 
+## Integrazioni successive sul ramo di sviluppo
+- La selezione di un nuovo percorso ora richiede una **assegnazione attiva** per l'operatore; gli amministratori possono gestire i percorsi indipendentemente dall'assegnazione. La navigazione e i percorsi esistenti non sono stati rimossi.
+- I giri di viabilità maggiore già salvati possono essere recuperati anche se l'assegnazione viene rimossa: questo evita di bloccare il salvataggio e la chiusura di un giro interrotto. Non è invece consentito avviare un nuovo giro maggiore senza una assegnazione attiva.
+- L'invio delle posizioni GPS copre anche la viabilità minore **durante un intervento attivato**, oltre ai giri maggiori. Rimangono il consenso esplicito, le limitazioni di visibilità/precisione e la verifica dell'assegnazione.
+- Una revoca o riassegnazione dell'incarico interrompe la condivisione volontaria e tenta di cancellare la posizione dell'operatore. Se il dispositivo è offline, può rimanere un vecchio punto che la centrale mostra come non aggiornato dopo 2 minuti.
+- Le regole Firebase di produzione NON sono state cambiate: la gestione effettiva dell'accesso deve essere verificata sull'istanza Firebase condivisa prima di un rilascio.
+
 ## Limiti noti da verificare
 - La condivisione GPS live riguarda i giri maggiori attivi e gli interventi minori avviati manualmente; per la viabilità minore non esiste ancora un giro cronologico completo lato cloud.
 - Il campo UID operatore va ricavato da Firebase Auth; la UI non consulta direttamente la lista `platformUsers`.
