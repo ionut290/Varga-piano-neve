@@ -54,6 +54,76 @@ service cloud.firestore {
        && request.resource.data.recordId == recordId;
      allow delete: if false;
    }
+   // Phase 2 — isolated emulator permissions, NOT production rules.
+   function knownRoute(routeKey, routeId) {
+     return (routeKey == 'major_0' && routeId == 'major:0')
+       || (routeKey == 'major_1' && routeId == 'major:1')
+       || (routeKey == 'major_2' && routeId == 'major:2')
+       || (routeKey == 'minor_0' && routeId == 'minor:0')
+       || (routeKey == 'minor_1' && routeId == 'minor:1')
+       || (routeKey == 'minor_2' && routeId == 'minor:2')
+       || (routeKey == 'minor_3' && routeId == 'minor:3');
+   }
+   function allowedStatus() {
+     return request.resource.data.status in ['active', 'released'];
+   }
+   match /pianoNeveVehicles/{vehicleId} {
+     allow get, list: if admin();
+     allow create, update: if admin()
+       && request.resource.data.name is string && request.resource.data.name.size() <= 90
+       && request.resource.data.active is bool
+       && request.resource.data.updatedBy == request.auth.uid;
+     allow delete: if false;
+   }
+   match /pianoNeveTeams/{teamId} {
+     allow get, list: if admin();
+     allow create, update: if admin()
+       && request.resource.data.name is string && request.resource.data.name.size() <= 90
+       && request.resource.data.operatorUid is string
+       && request.resource.data.active is bool
+       && request.resource.data.updatedBy == request.auth.uid;
+     allow delete: if false;
+   }
+   match /pianoNeveAssignments/{routeKey} {
+     allow get, list: if admin() || (enabled() && resource.data.operatorUid == request.auth.uid);
+     allow create: if admin() && allowedStatus()
+       && request.resource.data.status == 'active'
+       && request.resource.data.createdBy == request.auth.uid
+       && knownRoute(routeKey, request.resource.data.routeId)
+       && request.resource.data.operatorUid is string
+       && request.resource.data.teamId is string
+       && request.resource.data.vehicleId is string;
+     allow update: if admin() && allowedStatus()
+       && knownRoute(routeKey, request.resource.data.routeId)
+       && request.resource.data.routeId == resource.data.routeId
+       && request.resource.data.operatorUid == resource.data.operatorUid
+       && request.resource.data.teamId == resource.data.teamId
+       && request.resource.data.vehicleId == resource.data.vehicleId
+       && request.resource.data.createdBy == resource.data.createdBy
+       && resource.data.status == 'active'
+       && request.resource.data.status == 'released';
+     allow delete: if false;
+   }
+   function validLivePosition(uid) {
+     return request.resource.data.uid == uid && request.auth.uid == uid
+       && request.resource.data.lat is number
+       && request.resource.data.lng is number
+       && request.resource.data.accuracy is number
+       && request.resource.data.lat >= -90 && request.resource.data.lat <= 90
+       && request.resource.data.lng >= -180 && request.resource.data.lng <= 180
+       && request.resource.data.accuracy >= 0 && request.resource.data.accuracy <= 100
+       && knownRoute(request.resource.data.routeKey, request.resource.data.routeId)
+       && request.resource.data.updatedAt == request.time
+       && get(/databases/$(database)/documents/pianoNeveAssignments/$(request.resource.data.routeKey)).data.operatorUid == uid
+       && get(/databases/$(database)/documents/pianoNeveAssignments/$(request.resource.data.routeKey)).data.status == 'active'
+       && get(/databases/$(database)/documents/pianoNeveAssignments/$(request.resource.data.routeKey)).data.teamId == request.resource.data.teamId
+       && get(/databases/$(database)/documents/pianoNeveAssignments/$(request.resource.data.routeKey)).data.vehicleId == request.resource.data.vehicleId;
+   }
+   match /pianoNeveLivePositions/{uid} {
+     allow get, list: if admin() || (enabled() && request.auth.uid == uid);
+     allow create, update: if enabled() && validLivePosition(uid);
+     allow delete: if enabled() && request.auth.uid == uid;
+   }
    match /pianoNeveRouteEdits/{editId} {
      allow get, list: if enabled();
      allow create: if admin() && ownPayload() && request.resource.data.editId == editId;
