@@ -81,6 +81,15 @@ test('Firestore emulator roles and ownership',async t=>{
   await assertSucceeds(getDocs(query(collection(a,'pianoNeveAssignments'),where('operatorUid','==','op1'))));
   await assertFails(getDocs(collection(a,'pianoNeveAssignments')));
  });
+ await t.test('minor route GPS is only writable by its assigned operator',async()=>{
+  const minor={routeId:'minor:2',operatorUid:'op2',teamId:'crew-02',vehicleId:'truck-02',createdBy:'admin1',status:'active'};
+  await assertSucceeds(setDoc(doc(admin,'pianoNeveAssignments/minor_2'),minor));
+  const point={uid:'op2',routeId:'minor:2',routeKey:'minor_2',teamId:'crew-02',vehicleId:'truck-02',lat:44.58,lng:11.36,accuracy:9,updatedAt:serverTimestamp()};
+  await assertSucceeds(setDoc(doc(b,'pianoNeveLivePositions/op2'),point));
+  await assertFails(setDoc(doc(a,'pianoNeveLivePositions/op1'),{...point,uid:'op1'}));
+  await assertFails(setDoc(doc(b,'pianoNeveLivePositions/op2'),{...point,routeId:'major:2'}));
+  await assertSucceeds(deleteDoc(doc(b,'pianoNeveLivePositions/op2')));
+ });
  await t.test('Phase 2 live position restricted to active assigned operator',async()=>{
   const gps={uid:'op1',routeId:'major:0',routeKey:'major_0',teamId:'team-01',vehicleId:'truck-01',lat:44.57,lng:11.36,accuracy:10,updatedAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(a,'pianoNeveLivePositions/op1'),gps));
