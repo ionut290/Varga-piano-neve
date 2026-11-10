@@ -1,0 +1,63 @@
+// ISOLATED FIRESTORE EMULATOR TEST FIXTURE — NOT FOR DEPLOYMENT.
+// This file covers ONLY piano-neve paths. Never replace the production project rules with it.
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+   function signedIn() { return request.auth != null; }
+   function profilePath() {
+     return /databases/$(database)/documents/platformUsers/$(request.auth.uid);
+   }
+   function profile() { return get(profilePath()).data; }
+   function enabled() {
+     return signedIn() && exists(profilePath())
+       && profile().get('banned', false) != true
+       && profile().get('statoAccount', profile().get('accountStatus', '')) in
+          ['attivo','active','approvato','approved'];
+   }
+   function role() { return profile().get('role', profile().get('ruolo', 'operatore')); }
+   function admin() { return enabled() && role() == 'admin'; }
+   function office() { return enabled() && (role() == 'ufficio' || role() == 'admin'); }
+   function self(uid) { return enabled() && request.auth.uid == uid; }
+   function ownPayload() {
+     return request.resource.data.uid == request.auth.uid
+       && request.resource.data.userEmail == request.auth.token.email;
+   }
+   match /platformUsers/{uid} {
+     allow get: if signedIn() && request.auth.uid == uid;
+     allow list, create, update, delete: if false;
+   }
+   match /pianoNeveUsers/{uid} {
+     allow get: if self(uid);
+     allow list: if false;
+     allow create, update, delete: if self(uid);
+     match /sessions/{sessionId} {
+       allow get: if self(uid) && sessionId == 'active';
+       allow list: if false;
+       allow create, update: if self(uid) && sessionId == 'active' && ownPayload();
+       allow delete: if self(uid) && sessionId == 'active';
+     }
+     match /giri/{giroId} {
+       allow get, list: if self(uid);
+       allow create: if self(uid) && admin() && ownPayload() && request.resource.data.archiveId == giroId;
+       allow update: if self(uid) && admin() && ownPayload()
+          && resource.data.uid == request.resource.data.uid
+          && resource.data.archiveId == request.resource.data.archiveId;
+       allow delete: if false;
+     }
+   }
+   match /pianoNeveStreetWork/{recordId} {
+     allow get, list: if admin() || (enabled() && resource.data.uid == request.auth.uid);
+     allow create: if enabled() && ownPayload() && request.resource.data.recordId == recordId;
+     allow update: if enabled() && ownPayload()
+       && resource.data.uid == request.auth.uid
+       && resource.data.recordId == recordId
+       && request.resource.data.recordId == recordId;
+     allow delete: if false;
+   }
+   match /pianoNeveRouteEdits/{editId} {
+     allow get, list: if enabled();
+     allow create: if admin() && ownPayload() && request.resource.data.editId == editId;
+     allow update, delete: if admin();
+   }
+ }
+}
