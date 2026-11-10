@@ -7,7 +7,7 @@ La build `75-dev` è sviluppata esclusivamente sul ramo `develop/piano-neve-2-op
 - Centrale amministratore con mappa Leaflet e indicatori delle ultime posizioni per squadra autorizzata. Le posizioni dopo 120 secondi risultano **non aggiornate**.
 - Anagrafica squadre (nome, UID Firebase dell'operatore) e mezzi (descrizione, targa opzionale).
 - Assegnazione transazionale dei sette percorsi esistenti; un percorso attivo non può essere occupato da due squadre. L'amministratore deve liberarlo prima di riassegnarlo.
-- Operatore: visualizzazione assegnazioni e scelta volontaria di condividere il GPS. Condivisione soltanto durante un giro attivo di **viabilità maggiore**, con app visibile, rete disponibile e precisione GPS accettabile; frequenza massima 1 aggiornamento ogni 20 secondi.
+- Operatore: visualizzazione assegnazioni e scelta volontaria di condividere il GPS. Condivisione soltanto durante un giro attivo di **viabilità maggiore** o durante un intervento minore dichiarato in corso, con app visibile, rete disponibile e precisione GPS accettabile; frequenza massima 1 aggiornamento ogni 20 secondi.
 - Spegnimento della condivisione con rimozione del punto, salvo indisponibilità momentanea della rete. Una posizione storica non va interpretata come live.
 
 ## Sicurezza — blocco distribuzione
@@ -22,11 +22,11 @@ Per una successiva pubblicazione, l'amministratore deve:
 6. Confermare che il primo admin può creare anagrafiche e assegnazioni in staging e che nessuna regola sulle altre app è stata compromessa.
 
 ## Limiti noti da verificare
-- La condivisione GPS live è implementata **solo per giri maggiori**; la viabilità minore resta gestita dall'app esistente.
+- La condivisione GPS live riguarda i giri maggiori attivi e gli interventi minori avviati manualmente; per la viabilità minore non esiste ancora un giro cronologico completo lato cloud.
 - Il campo UID operatore va ricavato da Firebase Auth; la UI non consulta direttamente la lista `platformUsers`.
 - Il geotracking in background non è affidabile su tutte le PWA, in particolare iOS. Un punto stale non è una posizione attuale.
-- Assegnazione di un mezzo a più percorsi: non è ancora impedita lato server; valutare blocchi di disponibilità per mezzo se necessari.
-- Le assegnazioni sono visibili nell'app operatore, ma i percorsi legacy restano selezionabili: l'assegnazione non è ancora un blocco della navigazione per le altre rotte.
+- Il client amministratore controlla atomicamente i sette slot delle assegnazioni e impedisce riuso di mezzo, operatore o squadra: le regole Firestore di produzione dovranno comunque difendersi da client modificati, idealmente con funzioni server transazionali.
+- La scelta di un percorso passa da controllo di assegnazione attiva: se il servizio di lettura assegnazioni non è disponibile, si blocca la selezione per gli operatori. Gli amministratori possono selezionare ogni percorso. La navigazione e il ripristino dei giri legacy richiedono ancora una verifica sul dispositivo reale.
 - Non è presente una funzione per sincronizzare la posizione in assenza di connessione: volutamente, non viene creata una cronologia offline delle posizioni live.
 
 ## Accettazione
@@ -35,3 +35,8 @@ Per una successiva pubblicazione, l'amministratore deve:
 - Test manuali browser mobile, percorso Rosso/Blu/Giallo e recupero offline della Fase 1.
 - Due squadre sul campo, posizione consentita e revocata, refresh, dispositivo senza Internet e scadenza GPS.
 - Staging separato, mai deploy automatico dalla PR.
+
+## Ulteriori verifiche richieste
+- Se la condivisione GPS viene disattivata con il dispositivo offline, la richiesta di cancellazione non raggiunge Firestore: il punto remoto rimane fino al prossimo invio di rimozione o alla scadenza della finestra di freschezza. È necessario prevedere cancellazione periodica server-side prima della produzione.
+- Le verifiche sulle assegnazioni sono lato client per l'operatività; la sicurezza dipende sempre dalle regole Firestore e dalle procedure di amministrazione.
+- Prima del deploy bisogna esaminare le regole Firestore **attive**, non solo la fixture in test, e verificare i permessi del Varga Gestionale.
