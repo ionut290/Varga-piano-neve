@@ -36,7 +36,7 @@
  let teams=[],vehicles=[],assignments=[],positions=[],map=null,markers=[],subscriptions=[],ownAssignments=[],lastSend=0,sending=false,enabled=false,renderClock=0;
  function message(txt){$('opsError').textContent=txt||''}
  function opt(name,items,label){
-  const select=panel.querySelector('[name="'+name+'"]');
+  const select=panel.querySelector('#opsAssignmentForm select[name="'+name+'"]');
   const old=select.value;
   select.replaceChildren();
   for(const item of items){const option=document.createElement('option');option.value=item.id;option.textContent=label(item);select.appendChild(option)}
@@ -101,6 +101,7 @@
   }
  }
  root.addEventListener('varga-auth-ready',onAuth);
+ root.addEventListener('varga-auth-logout',()=>{clearSubscriptions();button.hidden=true;panel.hidden=true;consent.hidden=true;enabled=false;$('opsShareGps').checked=false;teams=[];vehicles=[];assignments=[];positions=[];ownAssignments=[];if(map)updateMap()});
  $('opsShareGps').onchange=async e=>{
   enabled=e.target.checked;
   $('opsShareStatus').textContent=enabled?'Attiva solo durante il giro':'Disattivata';
