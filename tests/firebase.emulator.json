@@ -1,6 +1,6 @@
 {
   "firestore": {
-    "rules": "firestore.phase1.rules"
+    "rules": "tests/firestore.phase1.rules"
   },
   "emulators": {
     "firestore": {
