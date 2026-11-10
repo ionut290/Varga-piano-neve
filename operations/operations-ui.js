@@ -33,7 +33,7 @@
  consent.innerHTML='<strong>Condivisione posizione</strong><p id="opsMyAssignment">In attesa di assegnazione</p><label><input id="opsShareGps" type="checkbox"> Condividi GPS durante il giro</label><p id="opsShareStatus" role="status">Disattivata</p>';
  document.body.appendChild(consent);
  const $=id=>document.getElementById(id);
- let teams=[],vehicles=[],assignments=[],positions=[],map=null,markers=[],subscriptions=[],ownAssignments=[],lastSend=0,sending=false,enabled=false,renderClock=0;
+ let teams=[],vehicles=[],assignments=[],positions=[],map=null,markers=[],subscriptions=[],ownAssignments=[],lastSend=0,sending=false,enabled=false,assignmentsReady=false,adminMode=false;
  function message(txt){$('opsError').textContent=txt||''}
  function opt(name,items,label){
   const select=panel.querySelector('#opsAssignmentForm select[name="'+name+'"]');
@@ -90,8 +90,8 @@
  $('opsAssignmentForm').onsubmit=e=>{e.preventDefault();formSubmit(async d=>{const team=teams.find(x=>x.id===d.get('teamId'));if(!team)throw new Error('Scegli una squadra');await api.assign({routeId:d.get('routeId'),teamId:team.id,vehicleId:d.get('vehicleId'),operatorUid:team.operatorUid})},e.currentTarget)};
  function clearSubscriptions(){for(const u of subscriptions)try{u()}catch(e){}subscriptions=[]}
  function onAuth(e){
-  clearSubscriptions();button.hidden=true;consent.hidden=true;enabled=false;$('opsShareGps').checked=false;
-  const role=e.detail?.role;if(role==='admin'){
+  clearSubscriptions();button.hidden=true;consent.hidden=true;enabled=false;assignmentsReady=false;adminMode=false;$('opsShareGps').checked=false;
+  const role=e.detail?.role;adminMode=role==='admin';if(role==='admin'){
    button.hidden=false;
    for(const [name,callback] of [['watchVehicles',v=>{vehicles=v;assignOptions();renderRoster()}],['watchTeams',v=>{teams=v;assignOptions();renderRoster()}],['watchAssignments',v=>{assignments=v;renderAssignments();updateMap()}],['watchPositions',v=>{positions=v;updateMap()}]]){
     try{subscriptions.push(api[name](callback,err=>message('Lettura non autorizzata: '+err.message)))}catch(ex){message(ex.message)}
@@ -99,13 +99,14 @@
   }
   if(role==='operatore'||role==='ufficio'||role==='admin'){
    consent.hidden=false;
-   try{subscriptions.push(api.watchOwnAssignments(v=>{ownAssignments=v.filter(a=>a.status==='active');$('opsMyAssignment').textContent=ownAssignments.length?ownAssignments.map(a=>core.routeFor(a.routeId)?.label||a.routeId).join(', '):'Nessun percorso attivo';if(!ownAssignments.length){enabled=false;$('opsShareGps').checked=false}},err=>{$('opsShareStatus').textContent=err.message}))}catch(err){$('opsShareStatus').textContent=err.message}
+   try{subscriptions.push(api.watchOwnAssignments(v=>{assignmentsReady=true;ownAssignments=v.filter(a=>a.status==='active');$('opsMyAssignment').textContent=ownAssignments.length?ownAssignments.map(a=>core.routeFor(a.routeId)?.label||a.routeId).join(', '):'Nessun percorso attivo';if(!ownAssignments.length){enabled=false;$('opsShareGps').checked=false;void api.clearOwnPosition().catch(()=>{})}},err=>{assignmentsReady=false;enabled=false;$('opsShareGps').checked=false;$('opsShareStatus').textContent='Assegnazioni non verificabili: '+err.message}))}catch(err){$('opsShareStatus').textContent=err.message}
   }
  }
  root.addEventListener('varga-auth-ready',onAuth);
- root.addEventListener('varga-auth-logout',()=>{clearSubscriptions();button.hidden=true;panel.hidden=true;consent.hidden=true;enabled=false;$('opsShareGps').checked=false;teams=[];vehicles=[];assignments=[];positions=[];ownAssignments=[];if(map)updateMap()});
+ root.addEventListener('varga-auth-logout',()=>{clearSubscriptions();button.hidden=true;panel.hidden=true;consent.hidden=true;enabled=false;$('opsShareGps').checked=false;teams=[];vehicles=[];assignments=[];positions=[];ownAssignments=[];assignmentsReady=false;adminMode=false;if(map)updateMap()});
  $('opsShareGps').onchange=async e=>{
-  enabled=e.target.checked;
+  enabled=e.target.checked&&ownAssignments.length>0&&assignmentsReady;
+  e.target.checked=enabled;
   $('opsShareStatus').textContent=enabled?'Attiva solo durante il giro':'Disattivata';
   if(!enabled)try{await api.clearOwnPosition()}catch(err){$('opsShareStatus').textContent='Disattivata; rimozione GPS in attesa di rete'}
  };
@@ -118,6 +119,17 @@
   lastSend=Date.now();sending=true;
   try{await api.publishPosition(point,a);$('opsShareStatus').textContent='GPS inviato · '+new Date().toLocaleTimeString('it-IT')}catch(e){$('opsShareStatus').textContent='Invio GPS non riuscito'}finally{sending=false}
  }
- async function endSharing(){if(!enabled)return;enabled=false;$('opsShareGps').checked=false;$('opsShareStatus').textContent='Disattivata';try{await api.clearOwnPosition()}catch(e){}}
- root.VargaSnowOperationsUI={receiveGps,endSharing};
+ async function endSharing(){enabled=false;$('opsShareGps').checked=false;$('opsShareStatus').textContent='Disattivata';try{await api.clearOwnPosition()}catch(e){}}
+ function mayUseRoute(routeId){
+   if(adminMode)return true;
+   if(!assignmentsReady)return false;
+   return ownAssignments.some(a=>core.canTrack(a,root.VargaSnowCloud?.user?.uid,routeId));
+ }
+ function requireAssignedRoute(routeId){
+   if(mayUseRoute(routeId))return true;
+   const desc=core.routeFor(routeId)?.label||routeId;
+   alert('Percorso '+desc+' non assegnato o assegnazioni non disponibili. Contatta la centrale operativa.');
+   return false;
+ }
+ root.VargaSnowOperationsUI={receiveGps,endSharing,mayUseRoute,requireAssignedRoute};
 })(window);
