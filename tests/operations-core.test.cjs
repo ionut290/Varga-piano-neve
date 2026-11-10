@@ -22,3 +22,18 @@ test('GPS coordinates and timestamps reject incorrect or stale values',()=>{
  assert.equal(ops.fresh(now-30000,now),true);
  assert.equal(ops.fresh(now-180000,now),false);
 });
+
+test('exclusive assignments reject reused route, vehicle, operator or team',()=>{
+ const existing=[{status:'active',routeId:'major:0',vehicleId:'truck-a',operatorUid:'driver-a',teamId:'crew-a'}];
+ const candidate={status:'active',routeId:'minor:1',vehicleId:'truck-b',operatorUid:'driver-b',teamId:'crew-b'};
+ assert.equal(ops.assignmentConflict(existing,candidate),false);
+ for(const key of ['routeId','vehicleId','operatorUid','teamId']){
+   assert.equal(ops.assignmentConflict(existing,[{...candidate,[key]:existing[0][key]}][0]),true,key);
+ }
+ assert.equal(ops.assignmentConflict([{...existing[0],status:'released'}],{...candidate,vehicleId:'truck-a'}),false);
+});
+test('minor road assignments permit GPS only while active',()=>{
+ const a=ops.makeAssignment({operatorUid:'operator1',teamId:'crew-a',vehicleId:'truck-a',routeId:'minor:2',createdBy:'admin1'});
+ assert.equal(ops.canTrack(a,'operator1','minor:2'),true);
+ assert.equal(ops.canTrack({...a,status:'released'},'operator1','minor:2'),false);
+});
