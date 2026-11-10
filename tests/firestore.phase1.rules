@@ -96,12 +96,15 @@ service cloud.firestore {
      allow update: if admin() && allowedStatus()
        && knownRoute(routeKey, request.resource.data.routeId)
        && request.resource.data.routeId == resource.data.routeId
-       && request.resource.data.operatorUid == resource.data.operatorUid
-       && request.resource.data.teamId == resource.data.teamId
-       && request.resource.data.vehicleId == resource.data.vehicleId
-       && request.resource.data.createdBy == resource.data.createdBy
-       && resource.data.status == 'active'
-       && request.resource.data.status == 'released';
+       && request.resource.data.operatorUid is string
+       && request.resource.data.teamId is string
+       && request.resource.data.vehicleId is string
+       && (
+         (resource.data.status == 'active' && request.resource.data.status == 'released'
+           && request.resource.data.operatorUid == resource.data.operatorUid)
+         || (resource.data.status == 'released' && request.resource.data.status == 'active'
+           && request.resource.data.createdBy == request.auth.uid)
+       );
      allow delete: if false;
    }
    function validLivePosition(uid) {
