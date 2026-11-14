@@ -210,3 +210,82 @@ body.major-navigation .majorVehicleIcon span{width:44px;height:44px;border-width
 .followPosition{position:absolute;right:12px;top:160px;z-index:1250;padding:12px 16px;border-radius:24px;background:#102d40;color:#fff;box-shadow:0 3px 12px #0006;font-size:13px;min-height:44px;touch-action:manipulation}
 .followPosition[aria-pressed="false"]{background:#1677ff}
 body.major-navigation .followPosition{position:fixed;top:calc(env(safe-area-inset-top) + 150px);z-index:3250}
+
+
+/* Varga Piano Neve — Command Center UI v1 */
+:root{
+  --snow-ink:#102d3d;
+  --snow-deep:#071d2b;
+  --snow-blue:#176b91;
+  --snow-ice:#edf7fb;
+  --snow-card:#ffffffee;
+  --snow-green:#18a957;
+  --snow-orange:#e98b24;
+  --snow-red:#d94a4a;
+}
+html,body{background:linear-gradient(145deg,#eaf5f8 0%,#f7fbfc 48%,#e7f2f6 100%);color:var(--snow-ink)}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.login-screen{background:
+ radial-gradient(circle at 18% 18%,#4e9bb833 0 2px,transparent 3px),
+ radial-gradient(circle at 82% 28%,#ffffff55 0 2px,transparent 3px),
+ linear-gradient(135deg,#061724 0%,#0b3145 52%,#176b91 100%);
+ background-size:180px 180px,230px 230px,100% 100%;
+}
+.login-screen:before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,#ffffff0b 35%,#ffffff0b 36%,transparent 36%);pointer-events:none}
+.login-card{position:relative;width:min(460px,100%);padding:32px;border:1px solid #ffffff30;border-radius:28px;background:#092433eb;box-shadow:0 28px 80px #0008;backdrop-filter:blur(18px)}
+.login-card>b{display:flex;align-items:center;gap:10px;font-size:19px;letter-spacing:.3px;color:#f4fbff}
+.login-card>b:first-letter{font-size:26px}
+.login-card h2{font-size:30px;letter-spacing:-1px;color:#fff;margin-top:18px}
+.login-card p{color:#b7ced9}
+.login-card input{min-height:54px;border:1px solid #4b7182;background:#0c2c3d;color:#fff;transition:.2s}
+.login-card input:focus{border-color:#68c8ee;box-shadow:0 0 0 4px #68c8ee2b}
+.login-card #loginButton{background:linear-gradient(135deg,#20bd62,#128d68);box-shadow:0 8px 20px #128d6844}
+.login-card #loginGoogleButton{background:#f6fbfd;color:#102d3d}
+header{height:72px;padding:12px 18px;background:linear-gradient(115deg,#071d2b,#0c4057 60%,#176b91);box-shadow:0 8px 24px #0b354522;border-bottom:1px solid #ffffff20}
+header b{font-size:18px;letter-spacing:.2px;color:#f5fbff}
+header small{color:#a9c6d3}
+.headerMetrics>span{background:#ffffff12;border:1px solid #ffffff1c;backdrop-filter:blur(8px)}
+.headerMetrics>span b{color:#fff}
+.headerMetrics button{background:#ffffff18;color:#fff;border:1px solid #ffffff30}
+#map{background:#dbeaf0}
+#panel{background:#f9fcfdf2;border:1px solid #cfe1e8;box-shadow:0 16px 42px #0d30431c;border-radius:24px;color:var(--snow-ink)}
+.status span,#hint,#minor p{color:#607d8b}
+.status b{color:#173b4d}
+.progress>div{background:#d7e7ed}
+.progress i{background:linear-gradient(90deg,#0f9a70,#27c86e)}
+.go{background:linear-gradient(135deg,#17a968,#0c8d6f);box-shadow:0 7px 16px #0c8d6f2b}
+.doneBtn{background:linear-gradient(135deg,#1b9dca,#176b91)}
+.pause{background:#f2a528;color:#fff}
+.danger{background:#c94242}
+.routeChooser{background:#061a28aa;backdrop-filter:blur(8px)}
+.routeChooserCard{background:#f8fcfe;border:1px solid #c7e0e9;box-shadow:0 22px 70px #06283c45;color:#123344}
+.routeChooserCard>b{color:#123344}
+.routeChooserCard>small,.startupCard small{color:#607d8b}
+.routePick{background:#e8f4f8;color:#123344;box-shadow:0 3px 12px #0e4c6612}
+.startupCard .routePick,#startupModeStep .routePick{background:#e7f4f8!important;color:#123344!important;-webkit-text-fill-color:#123344!important;border:1px solid #b7d6e1!important;text-shadow:none!important}
+.startupCard .routePick:active{background:#cfeaf3!important}
+.startupCard .redPick{background:#fff0ef!important;color:#a33333!important}
+.startupCard .bluePick{background:#eaf4ff!important;color:#14598b!important}
+.startupCard .yellowPick{background:#fff7d9!important;color:#765a00!important}
+.chooserCancel{background:#e8f0f3;color:#345463}
+.majorNavHud{background:#092c3eeF;border:1px solid #ffffff32;box-shadow:0 12px 34px #06233366}
+.majorNavIcon{background:linear-gradient(135deg,#1b87c4,#176b91)}
+.majorNavMetrics{background:#092c3eeF}
+.followPosition{background:#fff;color:#176b91;border:1px solid #b7d6e1;box-shadow:0 6px 18px #1e5b7126}
+.followPosition[aria-pressed="false"]{background:#176b91;color:#fff}
+.streetViewBtn,.updateAppBtn{background:#e6f1f5;color:#176b91;border:1px solid #c1dce5}
+.surfaceLegend{color:#607d8b}
+#navBanner{background:#eaf4f7;color:#176b91;border:1px solid #c9e0e8}
+#major>.operatorMoreBtn{background:#fff!important;color:#176b91!important;border:1px solid #c3dfe8!important;box-shadow:0 5px 16px #16495d22}
+#major>.majorMoreMenu{background:#f8fcfe!important;border-color:#c7e0e9!important;box-shadow:0 18px 44px #123b4c38!important}
+.majorMenuHeader{background:#eef7fa;border-color:#cfe1e8}
+.majorMenuHeader>b{color:#123344}
+.majorMoreClose{background:#dfeef3!important;color:#176b91!important}
+#major>.majorStateAction button{box-shadow:0 8px 22px #11435422}
+.appBuild{color:#7897a5}
+@media(max-width:799px){
+  header{height:62px;padding:8px 11px}
+  header b{font-size:15px}
+  #panel{border-radius:20px}
+  .login-card{padding:25px;border-radius:24px}
+}
