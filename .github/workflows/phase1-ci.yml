@@ -25,6 +25,7 @@ jobs:
           node-version: '22'
       - run: npm install --no-audit --no-fund
       - run: npm run check
+      - run: node tests/cantieri-deeplink.cjs
       - run: npm test
       - uses: actions/setup-java@v4
         with:
