@@ -543,7 +543,17 @@ async function bootWorkSession(){
  if(saved?.active&&saved.mode==='major'&&Number.isInteger(saved.routeIndex)&&majorRoutes[saved.routeIndex]){
   majorRi=saved.routeIndex;currentMode='major';$('startupChooser').hidden=true;
   await showMajorRoute();await restoreMajorWorkSession();restoreMajorNavVisuals();
- }else initStartupSelection();
+ }else{
+  initStartupSelection();
+  // Collegamento diretto dalle commesse Salatura Strada 1/2/3 di Varga Cantieri.
+  // NON inizia il lavoro e NON interrompe una sessione già attiva:
+  // seleziona soltanto il percorso assegnato.
+  const requested=new URLSearchParams(window.location.search).get('vargaMajorRoute');
+  if(/^[012]$/.test(String(requested||''))){
+    showStartupRouteStep('major');
+    await finishStartupSelection('major',Number(requested));
+  }
+ }
  renderMajor();drawAllRoutes();ui();gps();registerAppWorker();
 }
 
