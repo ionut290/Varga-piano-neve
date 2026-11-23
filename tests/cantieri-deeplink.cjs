@@ -12,4 +12,9 @@ assert.ok(routeBoot.includes("if(/^[012]$/.test"),"only three major salting rout
 assert.ok(routeBoot.includes("await finishStartupSelection('major',Number(requested))"),"linked route is selected");
 assert.ok(!routeBoot.includes("startMajorWork"),"deep-link cannot start an unattended GPS work session");
 assert.ok(source.includes("if(saved?.active&&saved.routeIndex!==n)"),"route switching while another tour is active must be refused");
+const html=fs.readFileSync("index.html","utf8");
+const sw=fs.readFileSync("sw.js","utf8");
+assert.ok(html.includes('app.js?v=74-dev-salatura1'),"the new app source must not be masked by old PWA caches");
+assert.ok(sw.includes("varga-piano-neve-v74-dev-salatura1"),"PWA cache version must change");
+assert.ok(sw.includes("./app.js?v=74-dev-salatura1"),"new script must be preloaded");
 console.log("OK: Salatura Strada deep links select red/blue/yellow while preserving active work.");
